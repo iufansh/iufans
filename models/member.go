@@ -15,6 +15,9 @@ type Member struct {
 	Version           int       // 版本
 	OrgId             int64     // 组织ID
 	RefId             int64     // 推荐人ID
+	AppNo             string
+	AppChannel        string
+	AppVersion        int
 	Username          string
 	ThirdAuthId       string // 三方登录的ID, 比如微信的unionid，华为的AuthHuaweiId
 	Name              string
@@ -37,7 +40,7 @@ func init() {
 	orm.RegisterModelWithPrefix(SysDbPrefix, new(Member))
 }
 
-func (model *Member) Paginate(page int, limit int, refId int64, param1 string) (list []Member, total int64) {
+func (model *Member) Paginate(page int, limit int, orderBy int, id int64, param1 string) (list []Member, total int64) {
 	if page < 1 {
 		page = 1
 	}
@@ -48,13 +51,28 @@ func (model *Member) Paginate(page int, limit int, refId int64, param1 string) (
 	if param1 != "" {
 		cond = cond.AndCond(cond.And("Name__contains", param1).Or("Username__contains", param1).Or("Mobile__contains", param1))
 	}
-	if refId != -1 {
-		cond = cond.And("RefId", refId)
+	if id != -1 {
+		cond1 := orm.NewCondition()
+		cond1 = cond1.And("RefId", id).Or("Id", id)
+		cond = cond.AndCond(cond1)
 	}
 	qs = qs.SetCond(cond)
 	qs = qs.Limit(limit)
 	qs = qs.Offset(offset)
-	qs = qs.OrderBy("-Id")
+	switch orderBy {
+	case 1:
+		qs = qs.OrderBy("Id")
+		break
+	case 2:
+		qs = qs.OrderBy("-LoginDate")
+		break
+	case 3:
+		qs = qs.OrderBy("LoginDate")
+		break
+	default:
+		qs = qs.OrderBy("-Id")
+		break
+	}
 	qs.All(&list)
 	total, _ = qs.Count()
 	return

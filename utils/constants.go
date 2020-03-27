@@ -6,6 +6,7 @@ const (
 	Sccompanyname       = "COMPANY_NAME"
 	Sccompanyaddress    = "COMPANY_ADDRESS"
 	Sccompanyconcat     = "COMPANY_CONCAT"
+	Scsmssignname       = "sms_signname"
 	Scsmsapi            = "sms_api"
 	Scsmsuid            = "sms_uid"
 	Scsmskey            = "sms_key"

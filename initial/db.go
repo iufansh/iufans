@@ -148,6 +148,11 @@ func initDbData() error {
 		{Id: 103, Pid: 100, Enabled: 1, Display: 0, Description: "删除支付配置", Url: "PaymentConfigIndexController.Delone", Name: "删除支付配置", Icon: "", Sort: 100},
 		{Id: 104, Pid: 100, Enabled: 1, Display: 0, Description: "启用禁用支付配置", Url: "PaymentConfigIndexController.Enabled", Name: "启用禁用支付配置", Icon: "", Sort: 100},
 
+		{Id: 110, Pid: 20, Enabled: 1, Display: 1, Description: "系统消息", Url: "InformationIndexController.Get", Name: "系统消息", Icon: "", Sort: 100},
+		{Id: 111, Pid: 110, Enabled: 1, Display: 0, Description: "添加系统消息", Url: "InformationAddController.Get", Name: "添加系统消息", Icon: "", Sort: 100},
+		{Id: 112, Pid: 110, Enabled: 1, Display: 0, Description: "编辑系统消息", Url: "InformationEditController.Get", Name: "编辑系统消息", Icon: "", Sort: 100},
+		{Id: 113, Pid: 110, Enabled: 1, Display: 0, Description: "删除系统消息", Url: "InformationIndexController.Delone", Name: "删除系统消息", Icon: "", Sort: 100},
+
 		/* 应用管理 */
 		{Id: 200, Pid: 0, Enabled: 1, Display: 1, Description: "应用管理", Url: "", Name: "应用管理", Icon: "#xe653;", Sort: 100},
 		{Id: 210, Pid: 200, Enabled: 1, Display: 1, Description: "App版本列表", Url: "AppVersionIndexController.Get", Name: "App版本列表", Icon: "", Sort: 100},
@@ -235,6 +240,10 @@ func initDbData() error {
 		{Id: 202, RoleId: 2, PermissionId: 102},
 		{Id: 203, RoleId: 2, PermissionId: 103},
 		{Id: 204, RoleId: 2, PermissionId: 104},
+		{Id: 210, RoleId: 2, PermissionId: 110},
+		{Id: 211, RoleId: 2, PermissionId: 111},
+		{Id: 212, RoleId: 2, PermissionId: 112},
+		{Id: 213, RoleId: 2, PermissionId: 113},
 
 		/* 应用管理 */
 		{Id: 300, RoleId: 2, PermissionId: 200},

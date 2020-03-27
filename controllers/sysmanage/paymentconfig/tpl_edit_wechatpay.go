@@ -28,6 +28,14 @@ var tplEditWechatpay = `
 								</div>
 							</div>
                             <div class="layui-form-item">
+                                <label class="layui-form-label">应用编号</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="AppNo" value="{{.data.AppNo}}" placeholder="" required lay-verify="required"
+                                           class="layui-input">
+                                </div>
+                                <div class="layui-form-mid layui-word-aux">对应App的编号</div>
+                            </div>
+                            <div class="layui-form-item">
                                 <label class="layui-form-label">应用名称</label>
                                 <div class="layui-input-inline">
                                     <input type="text" name="AppName" value="{{.data.AppName}}" required lay-verify="required"

@@ -27,16 +27,13 @@ func SendSmsVerifyCode(sender SmsSender) error {
 	vc := strconv.FormatInt(int64(RandNum(1000, 9999)), 10)
 	SetCache("SmsVerifyCode"+sender.Mobile, vc, 58)
 	beego.Info("Send sms verify code to mobile no:", sender.Mobile, ",verify code:", vc)
-	if sender.Company == "" {
-		sender.Company = "且学科技"
-	}
 	smsPam := sms.SmsParam{
-		Api:    sender.Api,
-		Uid:    sender.Uid,
-		Key:    sender.Key,
+		Api:      sender.Api,
+		Uid:      sender.Uid,
+		Key:      sender.Key,
 		SignName: sender.Company,
-		Mobile: sender.Mobile,
-		Text:   vc,
+		Mobile:   sender.Mobile,
+		Text:     vc,
 	}
 	if num, err := sms.SendSms(smsPam); err != nil {
 		beego.Error("SendSmsVerifyCode err:", err)

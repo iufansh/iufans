@@ -6,20 +6,21 @@ import (
 	"github.com/iufansh/iufans/controllers/sysmanage/admin"
 	"github.com/iufansh/iufans/controllers/sysmanage/gift"
 	"github.com/iufansh/iufans/controllers/sysmanage/index"
+	"github.com/iufansh/iufans/controllers/sysmanage/information"
+	"github.com/iufansh/iufans/controllers/sysmanage/iplist"
 	"github.com/iufansh/iufans/controllers/sysmanage/login"
+	"github.com/iufansh/iufans/controllers/sysmanage/organization"
 	"github.com/iufansh/iufans/controllers/sysmanage/permission"
+	"github.com/iufansh/iufans/controllers/sysmanage/quicknav"
 	"github.com/iufansh/iufans/controllers/sysmanage/role"
 	"github.com/iufansh/iufans/controllers/sysmanage/siteconfig"
-	"github.com/iufansh/iufans/controllers/sysmanage/quicknav"
-	"github.com/iufansh/iufans/controllers/sysmanage/iplist"
-	"github.com/iufansh/iufans/controllers/sysmanage/organization"
 
 	"github.com/astaxie/beego"
+	"github.com/iufansh/iufans/controllers/sysapi"
+	"github.com/iufansh/iufans/controllers/sysfront"
+	"github.com/iufansh/iufans/controllers/sysmanage/appversion"
 	"github.com/iufansh/iufans/controllers/sysmanage/member"
 	"github.com/iufansh/iufans/controllers/sysmanage/membersuggest"
-	"github.com/iufansh/iufans/controllers/sysfront"
-	"github.com/iufansh/iufans/controllers/sysapi"
-	"github.com/iufansh/iufans/controllers/sysmanage/appversion"
 	"github.com/iufansh/iufans/controllers/sysmanage/paymentconfig"
 )
 
@@ -73,6 +74,11 @@ func init() {
 	beego.Router(adminRouter+"/site/add", &siteconfig.SiteConfigAddController{})
 	beego.Router(adminRouter+"/site/edit", &siteconfig.SiteConfigEditController{})
 
+	beego.Router(adminRouter+"/information/index", &information.InformationIndexController{})
+	beego.Router(adminRouter+"/information/delone", &information.InformationIndexController{}, "post:Delone")
+	beego.Router(adminRouter+"/information/add", &information.InformationAddController{})
+	beego.Router(adminRouter+"/information/edit", &information.InformationEditController{})
+
 	beego.Router(adminRouter+"/qicknav/index", &quicknav.QuickNavIndexController{})
 	beego.Router(adminRouter+"/qicknav/delone", &quicknav.QuickNavIndexController{}, "post:Delone")
 	beego.Router(adminRouter+"/qicknav/add", &quicknav.QuickNavAddController{})
@@ -106,7 +112,6 @@ func init() {
 	beego.Router(adminRouter+"/gift/delone", &gift.GiftIndexController{}, "post:Delone")
 	beego.Router(adminRouter+"/gift/add", &gift.GiftAddController{})
 
-
 	// 前端
 	var frontRouter = beego.AppConfig.String("frontrouter")
 	beego.Router(frontRouter+"/uploadb", &sysfront.CommonFrontController{}, "post:Upload")
@@ -120,12 +125,15 @@ func init() {
 	var apiRouter = beego.AppConfig.String("apirouter")
 	beego.Router(apiRouter+"/login", &sysapi.LoginApiController{})
 	beego.Router(apiRouter+"/loginwx", &sysapi.LoginWxApiController{})
+	beego.Router(apiRouter+"/loginalipay", &sysapi.LoginAlipayApiController{})
 	beego.Router(apiRouter+"/logout", &sysapi.LoginApiController{}, "get:Logout")
 	beego.Router(apiRouter+"/refreshlogin", &sysapi.RefreshLoginApiController{})
 	beego.Router(apiRouter+"/reg", &sysapi.RegApiController{})
 	beego.Router(apiRouter+"/forgetpwd", &sysapi.ForgetPwdApiController{})
 	beego.Router(apiRouter+"/changepwd", &sysapi.ChangePwdApiController{})
 	beego.Router(apiRouter+"/suggest", &sysapi.MemberSuggestApiController{})
+	beego.Router(apiRouter+"/suggest/unread", &sysapi.MemberSuggestApiController{}, "get:GetNewFeedback")
 	beego.Router(apiRouter+"/checkupdate", &sysapi.AppVersionApiController{})
+	beego.Router(apiRouter+"/info", &sysapi.InformationApiController{})
 
 }

@@ -13,6 +13,7 @@ type PaymentConfig struct {
 	Modifior   int64     // 更新人Id
 	Version    int       // 版本
 	OrgId      int64     // 组织ID
+	AppNo      string    // App编号
 	AppName    string    // 应用名称（微信App支付必须）
 	PayType    string    // 支付类型
 	AppId      string    // AppId

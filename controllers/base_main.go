@@ -5,6 +5,7 @@ import (
 	"github.com/astaxie/beego"
 	"encoding/json"
 	"github.com/iufansh/iufans/utils"
+	"github.com/iufansh/iutils"
 	"net/http"
 	"strings"
 )
@@ -40,7 +41,7 @@ func (c *BaseMainController) RetJSON() {
 	b, _ := json.Marshal(ret)
 
 	beego.Info("\r\n----------response---------",
-		"\r\n", string(b),
+		"\r\n", iutils.SubString(string(b), 0, 300),
 		"\r\n-------------------------",)
 
 	c.Data["json"] = ret
@@ -72,7 +73,7 @@ func (c *BaseMainController) RetJSONOrigin() {
 	}
 
 	beego.Info("\r\n----------response origin---------",
-		"\r\n", bf.String(),
+		"\r\n", iutils.SubString(bf.String(), 0, 300),
 		"\r\n-------------------------",)
 
 	c.Ctx.Output.Body(bf.Bytes())

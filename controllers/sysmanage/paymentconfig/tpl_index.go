@@ -23,6 +23,7 @@ var tplIndex = `
 							<thead>
 							<tr>
 								<th>支付类型</th>
+								<th>应用编号</th>
 								<th>应用名称</th>
 								<th>AppId</th>
 								<th>更新时间</th>
@@ -35,6 +36,7 @@ var tplIndex = `
 							{{range $index, $vo := .dataList}}
 								<tr>
 									<td>{{$vo.PayType}}</td>
+									<td>{{$vo.AppNo}}</td>
 									<td>{{$vo.AppName}}</td>
 									<td>{{$vo.AppId}}</td>
 									<td>{{date $vo.ModifyDate "Y-m-d H:i:s"}}</td>

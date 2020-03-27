@@ -2,7 +2,9 @@ package sysapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
 	. "github.com/iufansh/iufans/models"
 	utils2 "github.com/iufansh/iufans/utils"
@@ -34,6 +36,7 @@ func (c *MemberSuggestApiController) Get() {
 		return
 	}
 	suggestList := make([]map[string]interface{}, 0)
+	var unReadExist bool
 	for _, v := range suggests {
 		suggestList = append(suggestList, map[string]interface{}{
 			"creatTime": iutils.FormatDatetime(v.CreateDate),
@@ -41,6 +44,16 @@ func (c *MemberSuggestApiController) Get() {
 			"status":    v.Status,
 			"feedback":  v.Feedback,
 		})
+		if v.Status == 1 || v.Status == 2 {
+			unReadExist = true
+		}
+	}
+	if unReadExist {
+		if _, err := o.QueryTable(new(MemberSuggest)).Filter("MemberId", c.LoginMemberId).Filter("Status__in", 1, 2).Update(orm.Params{
+			"Status": orm.ColValue(orm.ColAdd, 2),
+		}); err != nil {
+			logs.Error("MemberSuggestApiController.Get Update MemberSuggest err:", err)
+		}
 	}
 
 	c.Code = utils2.CODE_OK
@@ -75,6 +88,7 @@ func (c *MemberSuggestApiController) Post() {
 	var member Member
 	o.QueryTable(new(Member)).Filter("Id", c.LoginMemberId).One(&member, "OrgId", "Name", "Mobile")
 	ms := MemberSuggest{
+		AppInfo:  fmt.Sprintf("%s-%s-%d", c.AppNo, c.AppChannel, c.AppVersionCode),
 		OrgId:    member.OrgId,
 		MemberId: c.LoginMemberId,
 		Name:     member.Name,
@@ -88,4 +102,25 @@ func (c *MemberSuggestApiController) Post() {
 	}
 	c.Code = utils2.CODE_OK
 	c.Msg = "提交成功"
+}
+
+/*
+api 查询用户反馈是否已回复未读
+param:
+body:
+return:{"code":1,"msg":"成功", "data": 1}
+desc: data > 0 则存在
+*/
+func (c *MemberSuggestApiController) GetNewFeedback() {
+	defer c.RetJSON()
+	o := orm.NewOrm()
+	if count, err := o.QueryTable(new(MemberSuggest)).Filter("MemberId", c.LoginMemberId).Filter("Status__in", 1, 2).Count(); err != nil {
+		logs.Error("MemberSuggestApiController.getNewFeedback QueryTable MemberSuggest err:", err)
+		c.Msg = "查询失败"
+		return
+	} else {
+		c.Dta = count
+	}
+	c.Code = utils2.CODE_OK
+	c.Msg = "查询成功"
 }

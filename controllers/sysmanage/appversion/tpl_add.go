@@ -36,10 +36,11 @@ var tplAdd = `
 										<option value="others" {{if eq .appChannel "others"}}selected="selected"{{end}}>其他渠道</option>
 										<option value="huawei" {{if eq .appChannel "huawei"}}selected="selected"{{end}}>华为</option>
 										<option value="oppo" {{if eq .appChannel "oppo"}}selected="selected"{{end}}>OPPO</option>
+										<option value="vivo" {{if eq .appChannel "vivo"}}selected="selected"{{end}}>vivo</option>
 										<option value="360cn" {{if eq .appChannel "360cn"}}selected="selected"{{end}}>360</option>
 										<option value="xiaomi" {{if eq .appChannel "xiaomi"}}selected="selected"{{end}}>小米</option>
-										<option value="vivo" {{if eq .appChannel "vivo"}}selected="selected"{{end}}>vivo</option>
 										<option value="meizu" {{if eq .appChannel "meizu"}}selected="selected"{{end}}>魅族</option>
+										<option value="lenovomm" {{if eq .appChannel "lenovomm"}}selected="selected"{{end}}>联想</option>
 										<option value="samsungapps" {{if eq .appChannel "samsungapps"}}selected="selected"{{end}}>三星</option>
 										<option value="baidu" {{if eq .appChannel "baidu"}}selected="selected"{{end}}>百度</option>
 										<option value="myapp" {{if eq .appChannel "myapp"}}selected="selected"{{end}}>应用宝</option>
@@ -47,6 +48,7 @@ var tplAdd = `
 										<option value="91com" {{if eq .appChannel "91com"}}selected="selected"{{end}}>91助手</option>
 										<option value="meituan" {{if eq .appChannel "meituan"}}selected="selected"{{end}}>美团</option>
 										<option value="wandou" {{if eq .appChannel "wandou"}}selected="selected"{{end}}>豌豆荚</option>
+										<option value="aliapp" {{if eq .appChannel "aliapp"}}selected="selected"{{end}}>阿里分发</option>
 									</select>
 								</div>
                                 <div class="layui-form-mid layui-word-aux">每个版本升级时，必须先发系统渠道</div>

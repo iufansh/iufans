@@ -77,7 +77,7 @@ func (c *RegApiController) Post() {
 	// 查询层级
 	var refId = utils.ReverseInviteCode(p.InviteCode)
 
-	model, err := CreateMemberReg(refId, model.Username, model.Password, model.Name, "")
+	model, err := CreateMemberReg(c.AppNo, c.AppChannel, c.AppVersionCode, refId, model.Username, model.Password, model.Name, "")
 	if err != nil {
 		c.Msg = "注册失败，请重试"
 		return
@@ -99,7 +99,10 @@ func (c *RegApiController) Post() {
 	return
 }
 
-func CreateMemberReg(refId int64, username string, password string, name string, thirdAuthId string) (model Member, err error) {
+func CreateMemberReg(appNo, appChannel string, appVersion int, refId int64, username string, password string, name string, thirdAuthId string) (model Member, err error) {
+	model.AppNo = appNo
+	model.AppChannel = appChannel
+	model.AppVersion = appVersion
 	model.RefId = refId
 	model.Username = username
 	model.ThirdAuthId = thirdAuthId

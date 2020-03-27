@@ -65,7 +65,7 @@ var tplIndex = `
                                 <td>{{$vo.OsType}}</td>
                                 <td>{{$vo.VersionNo}}</td>
                                 <td>{{$vo.VersionName}}</td>
-                                <td>{{$vo.VersionDesc}}</td>
+                                <td style="max-width:300px;">{{$vo.VersionDesc}}</td>
                                 <td>{{$vo.DownloadUrl}}</td>
                                 <td>{{date $vo.PublishTime "Y-m-d H:i:s"}}</td>
                                 <td>{{if eq $vo.ForceUpdate 1}}<span class="layui-badge layui-bg-green">强制</span>{{else}}<span class="layui-badge layui-bg-gray">可选</span>{{end}}</td>

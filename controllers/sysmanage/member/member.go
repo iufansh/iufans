@@ -42,19 +42,20 @@ func (c *MemberIndexController) NestPrepare() {
 
 func (c *MemberIndexController) Get() {
 	param1 := strings.TrimSpace(c.GetString("param1"))
-	refId, _ := c.GetInt64("refId", -1)
+	id, _ := c.GetInt64("id", -1)
+	orderBy, _ := c.GetInt("orderBy", 0)
 
 	page, err := c.GetInt("p")
 	if err != nil {
 		page = 1
 	}
 	limit, _ := beego.AppConfig.Int("pagelimit")
-	list, total := new(Member).Paginate(page, limit, refId, param1)
+	list, total := new(Member).Paginate(page, limit, orderBy, id, param1)
 	c.SetPaginator(limit, total)
 	// 返回值
 	c.Data["dataList"] = &list
 	// 查询条件
-	c.Data["condArr"] = map[string]interface{}{"param1": param1, "refId": refId}
+	c.Data["condArr"] = map[string]interface{}{"param1": param1, "id": id, "orderBy": orderBy}
 
 	c.Data["urlMemberIndexGet"] = c.URLFor("MemberIndexController.Get")
 	c.Data["urlMemberLocked"] = c.URLFor("MemberIndexController.Locked")

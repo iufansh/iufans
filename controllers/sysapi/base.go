@@ -22,9 +22,11 @@ desc: 继承该接口的将验证登录状态
 */
 type BaseApiController struct {
 	controllers.BaseMainController
-	LoginMemberId int64
-	AppChannel    string
-	AppNo         string
+	LoginMemberId  int64
+	AppChannel     string
+	AppNo          string
+	AppVersionCode int
+	DeviceId       string
 }
 
 func (c *BaseApiController) Prepare() {
@@ -39,24 +41,52 @@ func (c *BaseApiController) Prepare() {
 		"\r\nBody:", string(c.Ctx.Input.RequestBody),
 		"\r\n--------------------------")
 
+	// 格式：AppNo;appChannel;deviceId;appVersionCode
+	apiApp := c.Ctx.Input.Header("Qx-Api-App")
+	// 格式：用户id;token
 	apiToken := c.Ctx.Input.Header("Qx-Api-Token")
 
 	var err error
+	if apiApp != "" {
+		strs := strings.Split(apiApp, ";")
+		if len(strs) > 0 {
+			c.AppNo = strs[0]
+		}
+		if len(strs) > 1 {
+			c.AppChannel = strs[1]
+		}
+		if len(strs) > 2 {
+			c.DeviceId = strs[2]
+		}
+		if len(strs) > 3 {
+			versionCode, _ := strconv.ParseInt(strs[3], 10, 64)
+			c.AppVersionCode = int(versionCode)
+		}
+	}
 	var token string
 	if apiToken != "" {
 		strs := strings.Split(apiToken, ";")
-		if len(strs) < 2 {
-			c.Code = utils.CODE_NEED_LOGIN
-			c.Msg = "Api参数异常"
-			c.RetJSON()
-			return
+		/*
+			if len(strs) < 2 {
+				c.Code = utils.CODE_NEED_LOGIN
+				c.Msg = "Api参数异常"
+				c.RetJSON()
+				return
+			}
+
+		*/
+		if len(strs) > 0 {
+			c.LoginMemberId, err = strconv.ParseInt(strs[0], 10, 64)
 		}
-		c.LoginMemberId, err = strconv.ParseInt(strs[0], 10, 64)
-		token = strs[1]
-		if len(strs) >= 3 {
+		if len(strs) > 1 {
+			token = strs[1]
+		}
+		// TODO 遗留，要删除
+		if len(strs) > 2 {
 			c.AppChannel = strs[2]
 		}
-		if len(strs) >= 4 {
+		// TODO 遗留，要删除
+		if len(strs) > 3 {
 			c.AppNo = strs[3]
 		}
 	} else {
@@ -125,10 +155,12 @@ desc: 如果mid参数不为空，则记录为已登录状态
 */
 type Base2ApiController struct {
 	controllers.BaseMainController
-	IsLogon       bool
-	LoginMemberId int64
-	AppChannel    string
-	AppNo         string
+	IsLogon        bool
+	LoginMemberId  int64
+	AppChannel     string
+	AppNo          string
+	AppVersionCode int
+	DeviceId       string
 }
 
 func (c *Base2ApiController) Prepare() {
@@ -143,25 +175,49 @@ func (c *Base2ApiController) Prepare() {
 		"\r\nBody:", string(c.Ctx.Input.RequestBody),
 		"\r\n--------------------------")
 
-	// 格式：用户id;token;appChannel
+	// 格式：AppNo;appChannel;deviceId;appVersionCode
+	apiApp := c.Ctx.Input.Header("Qx-Api-App")
+	// 格式：用户id;token
 	apiToken := c.Ctx.Input.Header("Qx-Api-Token")
 
 	var err error
+	if apiApp != "" {
+		strs := strings.Split(apiApp, ";")
+		if len(strs) > 0 {
+			c.AppNo = strs[0]
+		}
+		if len(strs) > 1 {
+			c.AppChannel = strs[1]
+		}
+		if len(strs) > 2 {
+			c.DeviceId = strs[2]
+		}
+		if len(strs) > 3 {
+			versionCode, _ := strconv.ParseInt(strs[3], 10, 64)
+			c.AppVersionCode = int(versionCode)
+		}
+	}
+	var token string
 	if apiToken != "" {
 		strs := strings.Split(apiToken, ";")
-		if len(strs) >= 1 {
+		if len(strs) > 0 {
 			c.LoginMemberId, err = strconv.ParseInt(strs[0], 10, 64)
 		}
-		if len(strs) >= 3 {
+		if len(strs) > 1 {
+			token = strs[1]
+		}
+		// TODO 遗留，要删除
+		if len(strs) > 2 {
 			c.AppChannel = strs[2]
 		}
-		if len(strs) >= 4 {
+		// TODO 遗留，要删除
+		if len(strs) > 3 {
 			c.AppNo = strs[3]
 		}
 	} else {
 		c.LoginMemberId, err = c.GetInt64("mid", 0)
 	}
-	if err == nil && c.LoginMemberId > 0 {
+	if err == nil && c.LoginMemberId > 0 && token != "" {
 		c.IsLogon = true
 	}
 	if app, ok := c.AppController.(ApiPreparer); ok {

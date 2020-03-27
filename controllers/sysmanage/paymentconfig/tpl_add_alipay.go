@@ -27,8 +27,16 @@ var tplAddAlipay = `
 								</div>
 							</div>
                             <div class="layui-form-item">
+                                <label class="layui-form-label">应用编号</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="AppNo" placeholder="" required lay-verify="required"
+                                           class="layui-input">
+                                </div>
+                                <div class="layui-form-mid layui-word-aux">对应App的编号</div>
+                            </div>
+                            <div class="layui-form-item">
                                 <label class="layui-form-label">应用名称</label>
-                                <div class="layui-input-block">
+                                <div class="layui-input-inline">
                                     <input type="text" name="AppName" placeholder="" required lay-verify="required"
                                            class="layui-input">
                                 </div>

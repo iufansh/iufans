@@ -1,6 +1,8 @@
 package sysapi
 
 import (
+	"fmt"
+	"github.com/astaxie/beego/logs"
 	. "github.com/iufansh/iufans/models"
 	. "github.com/iufansh/iutils"
 	"time"
@@ -63,13 +65,17 @@ func (c *LoginApiController) Post() {
 	if member.Password != Md5(p.Password, Pubsalt, member.Salt) {
 		cols := make([]string, 0)
 		member.LoginFailureCount += 1
-		if member.LoginFailureCount >= 5 {
+		if member.LoginFailureCount > 5 {
 			member.Locked = 1
 			cols = append(cols, "Locked")
 		}
 		cols = append(cols, "LoginFailureCount")
-		o.Update(&member, cols...)
-
+		if _, err := o.Update(&member, cols...); err != nil {
+			logs.Error("MemberLogin update login fail err:", err)
+		}
+		if member.LoginFailureCount >= 3 {
+			c.Msg = fmt.Sprintf("再错误%d次，将锁定账号", 6 - member.LoginFailureCount)
+		}
 		c.Msg = "用户名或密码错误"
 		return
 	}
@@ -98,7 +104,7 @@ func UpdateMemberLoginStatus(member Member) (code int, msg, token string) {
 	member.Locked = 0
 	member.LoginFailureCount = 0
 	member.LoginDate = time.Now()
-	if num, err := o.Update(&member, "LoginFailureCount", "LoginIp", "LoginDate", "TokenExpTime", "Token"); err != nil || num != 1 {
+	if num, err := o.Update(&member, "LoginFailureCount", "Locked", "LoginIp", "LoginDate", "TokenExpTime", "Token"); err != nil || num != 1 {
 		return utils.CODE_ERROR, "异常，请重试", ""
 	}
 	return utils.CODE_OK, "登录成功", token

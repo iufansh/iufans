@@ -18,8 +18,9 @@ type MemberSuggest struct {
 	Mobile     string
 	Name       string
 	Suggest    string
-	Status     int    // 0：未处理；1：接受建议；2：拒绝建议；
+	Status     int    // 0：未处理；1：已回复接受未读；2：已回复拒绝未读；3：接受建议已读；4：拒绝建议已读
 	Feedback   string // 回复
+	AppInfo    string // App信息
 }
 
 func init() {

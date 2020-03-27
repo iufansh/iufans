@@ -19,11 +19,13 @@ var tplIndex = `
 					<form class="layui-form layui-form-pane" action='{{.urlMemberSuggestIndexGet}}' method="get">
 						<div class="layui-inline">
 							<div class="layui-input-inline">
-								<select name="osType">
+								<select name="status">
 									<option value="">全部状态</option>
 									<option value="0" {{if eq $.condArr.status 0}}selected="selected"{{end}}>未处理</option>
-									<option value="1" {{if eq $.condArr.status 1}}selected="selected"{{end}}>接收建议</option>
-									<option value="2" {{if eq $.condArr.status 2}}selected="selected"{{end}}>拒绝建议</option>
+									<option value="1" {{if eq $.condArr.status 1}}selected="selected"{{end}}>接收建议未读</option>
+									<option value="2" {{if eq $.condArr.status 2}}selected="selected"{{end}}>拒绝建议未读</option>
+									<option value="3" {{if eq $.condArr.status 3}}selected="selected"{{end}}>接收建议已读</option>
+									<option value="4" {{if eq $.condArr.status 4}}selected="selected"{{end}}>拒绝建议已读</option>
 								</select>
 							</div>
 						</div>	
@@ -41,7 +43,7 @@ var tplIndex = `
 						<table class="layui-table">
 							<thead>
 							<tr>
-								<th>ID</th>
+								<th>App信息</th>
 								<th>会员手机号</th>
 								<th>会员名</th>
 								<th>会员ID</th>
@@ -55,14 +57,25 @@ var tplIndex = `
 							<tbody>
 							{{range $index, $vo := .dataList}}
 								<tr>
-									<td>{{$vo.Id}}</td>
+									<td>{{$vo.AppInfo}}</td>
 									<td>{{$vo.Mobile}}</td>
 									<td>{{$vo.Name}}</td>
 									<td>{{$vo.MemberId}}</td>
-									<td>{{$vo.Suggest}}</td>
+									<td style="max-width: 300px;">{{$vo.Suggest}}</td>
 									<td>{{date $vo.CreateDate "Y-m-d H:i:s"}}</td>
-									<td>{{$vo.Feedback}}</td>
-                                    <td>{{if eq $vo.Status 1}}<span class="layui-badge layui-bg-green">接受建议</span>{{else if eq $vo.Status 2}}<span class="layui-badge layui-bg-red">拒绝建议</span>{{else}}<span class="layui-badge layui-bg-gray">未处理</span>{{end}}</td>
+									<td style="max-width: 250px;">{{$vo.Feedback}}</td>
+                                    <td>{{if eq $vo.Status 1}}
+											<span class="layui-badge layui-bg-blue">接受未读</span>
+										{{else if eq $vo.Status 3}}
+											<span class="layui-badge layui-bg-green">接受已读</span>
+										{{else if eq $vo.Status 2}}
+											<span class="layui-badge layui-bg-orange">拒绝未读</span>
+										{{else if eq $vo.Status 4}}
+											<span class="layui-badge layui-bg-red">拒绝已读</span>
+										{{else}}
+											<span class="layui-badge layui-bg-gray">未处理</span>
+										{{end}}
+									</td>
 									<td>
 									{{if eq $vo.Status 0}}
 										<button type="button" href='{{$.urlMemberSuggestStatus}}?id={{$vo.Id}}&status=1' class="layui-btn layui-btn-xs ajax-feedback">接受建议</button>

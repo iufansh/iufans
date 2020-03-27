@@ -15,6 +15,7 @@ import (
 
 func validatePaymentConfig(model *PaymentConfig) (hasError bool, errMsg string) {
 	valid := validation.Validation{}
+	valid.Required(model.AppNo, "errmsg").Message("应用编号必填")
 	valid.Required(model.AppName, "errmsg").Message("应用名称必填")
 	valid.MaxSize(model.AppName, 100, "errmsg").Message("应用名称最长100个字符")
 	valid.Required(model.AppId, "errmsg").Message("AppId必填")
@@ -273,7 +274,7 @@ func (c *PaymentConfigEditController) Post() {
 	}
 	o := orm.NewOrm()
 	model.Modifior = c.LoginAdminId
-	if _, err := o.Update(&model, "AppId", "AppName", "ConfValue", "Enabled", "Remark", "ModifyDate"); err != nil {
+	if _, err := o.Update(&model, "AppId", "AppNo", "AppName", "ConfValue", "Enabled", "Remark", "ModifyDate"); err != nil {
 		c.Msg = "更新失败"
 		beego.Error("Update PaymentConfig error", err)
 	} else {
