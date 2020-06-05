@@ -49,6 +49,7 @@ var tplIndex = `
 								<th>ID</th>
 								<th>用户名</th>
 								<th>名称</th>
+								<th>三方登录ID</th>
 								<th>VIP</th>
 								<th>是否可用</th>
 								<th>注册App信息</th>
@@ -64,6 +65,7 @@ var tplIndex = `
 									<td>{{$vo.Id}}</td>
 									<td>{{$vo.Username}}</td>
 									<td>{{$vo.Name}}</td>
+									<td>{{$vo.ThirdAuthId}}</td>
 									<td>{{$vo.Vip}}</td>
                                     <td>{{if eq $vo.Enabled 1}}<span class="layui-badge layui-bg-green">启用</span>{{else}}<span class="layui-badge layui-bg-red">禁用</span>{{end}}</td>
 									<td>{{$vo.AppNo}}-{{$vo.AppChannel}}-{{$vo.AppVersion}}</td>

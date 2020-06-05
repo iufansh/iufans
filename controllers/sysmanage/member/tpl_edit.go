@@ -24,7 +24,7 @@ var tplEdit = `
 							<div class="layui-form-item">
 								<label class="layui-form-label">用户名</label>
 								<div class="layui-input-block">
-									<input type="text" name="Username" value="{{.data.Username}}" class="layui-input" readonly>
+									<input type="text" name="Username" value="{{.data.Username}}" class="layui-input" required lay-verify="required">
 								</div>
 							</div>
 							<div class="layui-form-item">
@@ -56,6 +56,13 @@ var tplEdit = `
 								<div class="layui-input-block">
 									<input type="radio" name="Enabled" value="1" title="启用" {{if eq .data.Enabled 1}}checked="checked"{{end}}>
 									<input type="radio" name="Enabled" value="0" title="禁用" {{if eq .data.Enabled 0}}checked="checked"{{end}}>
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<label class="layui-form-label">状态</label>
+								<div class="layui-input-block">
+									<input type="radio" name="Cancelled" value="0" title="正常" {{if eq .data.Cancelled 0}}checked="checked"{{end}}>
+									<input type="radio" name="Cancelled" value="1" title="注销" {{if eq .data.Cancelled 1}}checked="checked"{{end}}>
 								</div>
 							</div>
 							<div class="layui-form-item">

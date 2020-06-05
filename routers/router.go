@@ -7,6 +7,7 @@ import (
 	"github.com/iufansh/iufans/controllers/sysmanage/gift"
 	"github.com/iufansh/iufans/controllers/sysmanage/index"
 	"github.com/iufansh/iufans/controllers/sysmanage/information"
+	"github.com/iufansh/iufans/controllers/sysmanage/normalquestion"
 	"github.com/iufansh/iufans/controllers/sysmanage/iplist"
 	"github.com/iufansh/iufans/controllers/sysmanage/login"
 	"github.com/iufansh/iufans/controllers/sysmanage/organization"
@@ -41,6 +42,7 @@ func init() {
 	beego.Router(adminRouter+"/sys/postauth", &index.SysIndexController{}, "post:PostAuth")
 
 	beego.Router(adminRouter+"/sys/upload", &sysmanage.SyscommonController{}, "post:Upload")
+	beego.Router(adminRouter+"/sys/uploadmulti", &sysmanage.SyscommonController{}, "post:UploadMulti")
 
 	beego.Router(adminRouter+"/org/index", &organization.OrganizationIndexController{})
 	beego.Router(adminRouter+"/org/delone", &organization.OrganizationIndexController{}, "post:Delone")
@@ -78,6 +80,11 @@ func init() {
 	beego.Router(adminRouter+"/information/delone", &information.InformationIndexController{}, "post:Delone")
 	beego.Router(adminRouter+"/information/add", &information.InformationAddController{})
 	beego.Router(adminRouter+"/information/edit", &information.InformationEditController{})
+
+	beego.Router(adminRouter+"/normalquestion/index", &normalquestion.NormalQuestionIndexController{})
+	beego.Router(adminRouter+"/normalquestion/delone", &normalquestion.NormalQuestionIndexController{}, "post:Delone")
+	beego.Router(adminRouter+"/normalquestion/add", &normalquestion.NormalQuestionAddController{})
+	beego.Router(adminRouter+"/normalquestion/edit", &normalquestion.NormalQuestionEditController{})
 
 	beego.Router(adminRouter+"/qicknav/index", &quicknav.QuickNavIndexController{})
 	beego.Router(adminRouter+"/qicknav/delone", &quicknav.QuickNavIndexController{}, "post:Delone")
@@ -127,6 +134,8 @@ func init() {
 	beego.Router(apiRouter+"/loginwx", &sysapi.LoginWxApiController{})
 	beego.Router(apiRouter+"/loginalipay", &sysapi.LoginAlipayApiController{})
 	beego.Router(apiRouter+"/logout", &sysapi.LoginApiController{}, "get:Logout")
+	beego.Router(apiRouter+"/bindphone", &sysapi.MemberApiController{}, "post:BindPhone")
+	beego.Router(apiRouter+"/cancelaccount", &sysapi.MemberApiController{}, "post:CancelAccount")
 	beego.Router(apiRouter+"/refreshlogin", &sysapi.RefreshLoginApiController{})
 	beego.Router(apiRouter+"/reg", &sysapi.RegApiController{})
 	beego.Router(apiRouter+"/forgetpwd", &sysapi.ForgetPwdApiController{})
@@ -135,5 +144,6 @@ func init() {
 	beego.Router(apiRouter+"/suggest/unread", &sysapi.MemberSuggestApiController{}, "get:GetNewFeedback")
 	beego.Router(apiRouter+"/checkupdate", &sysapi.AppVersionApiController{})
 	beego.Router(apiRouter+"/info", &sysapi.InformationApiController{})
+	beego.Router(apiRouter+"/normalqa", &sysapi.NormalQuestionApiController{})
 
 }

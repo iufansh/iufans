@@ -6,6 +6,7 @@ import (
 	"strings"
 	"github.com/iufansh/iufans/models"
 	utils "github.com/iufansh/iutils"
+	utils3 "github.com/iufansh/iufans/utils"
 	utils2 "github.com/iufansh/iufans/utils"
 )
 
@@ -33,6 +34,10 @@ func (c *ForgetPwdFrontController) Post() {
 	}
 	if ok := utils2.VerifySmsVerifyCode(mobile, smsCode); !ok {
 		c.Msg = "短信验证码错误"
+		return
+	}
+	if !utils3.GetCpt().VerifyReq(c.Ctx.Request) {
+		c.Msg = "请刷新验证码，重新输入"
 		return
 	}
 	o := orm.NewOrm()

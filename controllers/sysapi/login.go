@@ -54,6 +54,10 @@ func (c *LoginApiController) Post() {
 		c.Msg = "用户名或密码错误"
 		return
 	}
+	if member.Cancelled == 1 {
+		c.Msg = "用户名或密码错误" // 已注销
+		return
+	}
 	if member.Enabled == 0 {
 		c.Msg = "账号已禁用"
 		return
@@ -87,7 +91,7 @@ func (c *LoginApiController) Post() {
 	c.Dta = map[string]interface{}{
 		"id":        member.Id,
 		"token":     token,
-		"phone":     member.Username,
+		"phone":     "", // 敏感信息尽量不在网络传输
 		"nickname":  member.Name,
 		"autoLogin": true,
 	}

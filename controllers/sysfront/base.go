@@ -90,13 +90,15 @@ func (c *Base2FrontController) Prepare() {
 		var cacToken string
 		if err := utils.GetCache(fmt.Sprintf("loginMemberId%d", memberId), &cacToken); err != nil || cacToken == "" {
 			c.IsLogon = false
+		} else {
+			sesToken, ok := c.GetSession("loginMemberToken").(string)
+			if !ok || cacToken != sesToken {
+				c.IsLogon = false
+			} else {
+				c.IsLogon = true
+				c.LoginMemberId = memberId
+			}
 		}
-		sesToken, ok := c.GetSession("loginMemberToken").(string)
-		if !ok || cacToken != sesToken {
-			c.IsLogon = false
-		}
-		c.LoginMemberId = memberId
-		c.IsLogon = true
 	} else {
 		c.IsLogon = false
 	}

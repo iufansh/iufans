@@ -63,7 +63,7 @@ func (c *ForgetPwdApiController) Post() {
 	c.Dta = map[string]interface{}{
 		"id":        member.Id,
 		"token":     token,
-		"phone":     member.Username,
+		"phone":     "", // 敏感信息尽量不在网络传输
 		"nickname":  member.Name,
 		"autoLogin": true,
 	}

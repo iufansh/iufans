@@ -2,6 +2,7 @@ package initial
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	utils "github.com/iufansh/iutils"
 
 	"github.com/astaxie/beego"
@@ -21,7 +22,10 @@ func InitSql() {
 	var dataSource string
 	dbDriver := beego.AppConfig.String("dbdriver")
 	if dbDriver == "mysql" {
-		orm.RegisterDriver("mysql", orm.DRMySQL)
+		if err := orm.RegisterDriver("mysql", orm.DRMySQL); err != nil {
+			logs.Error("orm.RegisterDriver mysql err:", err)
+			return
+		}
 		user := beego.AppConfig.String("mysqluser")
 		passwd := beego.AppConfig.String("mysqlpass")
 		host := beego.AppConfig.String("mysqlurls")
@@ -33,20 +37,25 @@ func InitSql() {
 		}
 		dataSource = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&loc=%s", user, passwd, host, port, dbname, "Asia%2FShanghai")
 	} else if dbDriver == "sqlite3" {
-		orm.RegisterDriver("sqlite3", orm.DRSqlite)
+		if err := orm.RegisterDriver("sqlite3", orm.DRSqlite); err != nil {
+			logs.Error("orm.RegisterDriver sqlite3 err:", err)
+			return
+		}
 		orm.DefaultTimeLoc = time.Local
 		dataSource = "./data.db"
 	} else {
 		panic("未知数据库驱动类型")
 	}
-	orm.RegisterDataBase("default", dbDriver, dataSource, maxIdle, maxConn)
+	if err := orm.RegisterDataBase("default", dbDriver, dataSource, maxIdle, maxConn); err != nil {
+		logs.Error("orm.RegisterDataBase default err:", err)
+	}
 }
 
 func InitDbFrameData() {
 	// 自动建表
 	autoCreateDb := beego.AppConfig.DefaultInt("dbautocreate", 0)
 	if autoCreateDb == 1 || autoCreateDb == 2 {
-		beego.Info("Auto create db")
+		logs.Info("Auto create db")
 		isForce := false
 		if autoCreateDb == 2 { // drop table 后再建表
 			isForce = true
@@ -54,7 +63,7 @@ func InitDbFrameData() {
 		// 遇到错误立即返回
 		err := orm.RunSyncdb("default", isForce, true)
 		if err != nil {
-			beego.Error("Auto create db error", err.Error())
+			logs.Error("Auto create db error", err.Error())
 			return
 		}
 		if err := initDbData(); err != nil {
@@ -70,12 +79,15 @@ func initDbData() error {
 	if isExist := o.QueryTable(new(Admin)).Exist(); isExist {
 		return nil
 	}
-	beego.Info("Init frame data")
-	o.Begin()
+	logs.Info("Init frame data")
+	if err := o.Begin(); err != nil {
+		logs.Error("db initDbData orm begin transaction err:", err)
+		return err
+	}
 	// 系统配置
 	sc := SiteConfig{Id: 1, Code: "NAME", Value: "公司名称", IsSystem: 1}
 	if _, err := o.Insert(&sc); err != nil {
-		beego.Warn("Init SiteConfig data error", err)
+		logs.Warn("Init SiteConfig data error", err)
 	}
 	pwd := utils.Md5(utils.Md5("111111"), utils.Pubsalt, "17b007bdb8e7af362a1167bcce7277c9")
 	// 管理员
@@ -84,7 +96,7 @@ func initDbData() error {
 		{Id: 2, Enabled: 1, Locked: 0, IsSystem: 0, LoginFailureCount: 0, Salt: "17b007bdb8e7af362a1167bcce7277c9", Name: "管理员", Password: pwd, Username: "admin", LoginVerify: 0},
 	}
 	if num, err := o.InsertMulti(len(admins), admins); err != nil {
-		beego.Warn("Init Admin data success num:", num, " error:", err)
+		logs.Warn("Init Admin data success num:", num, " error:", err)
 	}
 	// 角色
 	roles := []Role{
@@ -93,7 +105,7 @@ func initDbData() error {
 		{Id: 10, Enabled: 1, Description: "普通管理权限", IsSystem: 0, Name: "普通管理员", IsOrg: 1},
 	}
 	if num, err := o.InsertMulti(len(roles), roles); err != nil {
-		beego.Warn("Init Role data success num:", num, " error", err)
+		logs.Warn("Init Role data success num:", num, " error", err)
 	}
 	// 管理员--角色关联
 	adminRoles := []AdminRole{
@@ -102,7 +114,7 @@ func initDbData() error {
 		{Id: 10, AdminId: 2, RoleId: 10},
 	}
 	if num, err := o.InsertMulti(len(adminRoles), adminRoles); err != nil {
-		beego.Warn("Init AdminRole data success num:", num, " error", err)
+		logs.Warn("Init AdminRole data success num:", num, " error", err)
 	}
 	// 菜单权限配置
 	permissions := []Permission{
@@ -111,7 +123,8 @@ func initDbData() error {
 		{Id: 3, Pid: 0, Enabled: 1, Display: 0, Description: "系统信息", Url: "SysIndexController.Get", Name: "系统信息", Icon: "", Sort: 3},
 		{Id: 4, Pid: 3, Enabled: 1, Display: 0, Description: "登录谷歌验证页面", Url: "SysIndexController.GetAuth", Name: "登录谷歌验证页面", Icon: "", Sort: 3},
 		{Id: 5, Pid: 3, Enabled: 1, Display: 0, Description: "登录谷歌验证提交", Url: "SysIndexController.PostAuth", Name: "登录谷歌验证提交", Icon: "", Sort: 3},
-		{Id: 10, Pid: 0, Enabled: 1, Display: 0, Description: "系统通用-文件上传", Url: "SyscommonController.Upload", Name: "系统通用-文件上传", Icon: "", Sort: 10},
+		{Id: 10, Pid: 0, Enabled: 1, Display: 0, Description: "系统通用-单文件上传", Url: "SyscommonController.Upload", Name: "系统通用-单文件上传", Icon: "", Sort: 10},
+		{Id: 11, Pid: 0, Enabled: 1, Display: 0, Description: "系统通用-多文件上传", Url: "SyscommonController.UploadMulti", Name: "系统通用-多文件上传", Icon: "", Sort: 10},
 		{Id: 20, Pid: 0, Enabled: 1, Display: 1, Description: "系统设置", Url: "", Name: "系统设置", Icon: "#xe716;", Sort: 100},
 		{Id: 21, Pid: 20, Enabled: 1, Display: 1, Description: "管理员", Url: "AdminIndexController.Get", Name: "管理员", Icon: "", Sort: 100},
 		{Id: 22, Pid: 21, Enabled: 1, Display: 0, Description: "添加管理员", Url: "AdminAddController.Get", Name: "添加管理员", Icon: "", Sort: 100},
@@ -153,6 +166,11 @@ func initDbData() error {
 		{Id: 112, Pid: 110, Enabled: 1, Display: 0, Description: "编辑系统消息", Url: "InformationEditController.Get", Name: "编辑系统消息", Icon: "", Sort: 100},
 		{Id: 113, Pid: 110, Enabled: 1, Display: 0, Description: "删除系统消息", Url: "InformationIndexController.Delone", Name: "删除系统消息", Icon: "", Sort: 100},
 
+		{Id: 120, Pid: 20, Enabled: 1, Display: 1, Description: "常见问题", Url: "NormalQuestionIndexController.Get", Name: "常见问题", Icon: "", Sort: 100},
+		{Id: 121, Pid: 120, Enabled: 1, Display: 0, Description: "添加常见问题", Url: "NormalQuestionAddController.Get", Name: "添加常见问题", Icon: "", Sort: 100},
+		{Id: 122, Pid: 120, Enabled: 1, Display: 0, Description: "编辑常见问题", Url: "NormalQuestionEditController.Get", Name: "编辑常见问题", Icon: "", Sort: 100},
+		{Id: 123, Pid: 120, Enabled: 1, Display: 0, Description: "删除常见问题", Url: "NormalQuestionIndexController.Delone", Name: "删除常见问题", Icon: "", Sort: 100},
+
 		/* 应用管理 */
 		{Id: 200, Pid: 0, Enabled: 1, Display: 1, Description: "应用管理", Url: "", Name: "应用管理", Icon: "#xe653;", Sort: 100},
 		{Id: 210, Pid: 200, Enabled: 1, Display: 1, Description: "App版本列表", Url: "AppVersionIndexController.Get", Name: "App版本列表", Icon: "", Sort: 100},
@@ -175,7 +193,7 @@ func initDbData() error {
 		{Id: 331, Pid: 330, Enabled: 1, Display: 0, Description: "会员反馈状态设置", Url: "MemberSuggestIndexController.Status", Name: "会员反馈状态设置", Icon: "", Sort: 100},
 	}
 	if num, err := o.InsertMulti(len(permissions), permissions); err != nil {
-		beego.Warn("Init Permission data success num:", num, " error", err)
+		logs.Warn("Init Permission data success num:", num, " error", err)
 	}
 	// 角色--权限关联
 	rolePermissions := []RolePermission{
@@ -213,6 +231,7 @@ func initDbData() error {
 		{Id: 104, RoleId: 2, PermissionId: 4},
 		{Id: 105, RoleId: 2, PermissionId: 5},
 		{Id: 110, RoleId: 2, PermissionId: 10},
+		{Id: 111, RoleId: 2, PermissionId: 11},
 		{Id: 120, RoleId: 2, PermissionId: 20},
 		{Id: 121, RoleId: 2, PermissionId: 21},
 		{Id: 122, RoleId: 2, PermissionId: 22},
@@ -224,10 +243,12 @@ func initDbData() error {
 		{Id: 151, RoleId: 2, PermissionId: 51},
 		{Id: 152, RoleId: 2, PermissionId: 52},
 		{Id: 153, RoleId: 2, PermissionId: 53},
+		/*
 		{Id: 160, RoleId: 2, PermissionId: 60},
 		{Id: 161, RoleId: 2, PermissionId: 61},
 		{Id: 162, RoleId: 2, PermissionId: 62},
 		{Id: 163, RoleId: 2, PermissionId: 63},
+		 */
 		{Id: 170, RoleId: 2, PermissionId: 70},
 		{Id: 171, RoleId: 2, PermissionId: 71},
 		{Id: 172, RoleId: 2, PermissionId: 72},
@@ -244,8 +265,13 @@ func initDbData() error {
 		{Id: 211, RoleId: 2, PermissionId: 111},
 		{Id: 212, RoleId: 2, PermissionId: 112},
 		{Id: 213, RoleId: 2, PermissionId: 113},
+		{Id: 220, RoleId: 2, PermissionId: 120},
+		{Id: 221, RoleId: 2, PermissionId: 121},
+		{Id: 222, RoleId: 2, PermissionId: 122},
+		{Id: 223, RoleId: 2, PermissionId: 123},
 
 		/* 应用管理 */
+		/* 默认不开启
 		{Id: 300, RoleId: 2, PermissionId: 200},
 		{Id: 310, RoleId: 2, PermissionId: 210},
 		{Id: 311, RoleId: 2, PermissionId: 211},
@@ -255,14 +281,17 @@ func initDbData() error {
 		{Id: 320, RoleId: 2, PermissionId: 220},
 		{Id: 321, RoleId: 2, PermissionId: 221},
 		{Id: 322, RoleId: 2, PermissionId: 222},
+		*/
 		/* 会员管理 */
 		{Id: 400, RoleId: 2, PermissionId: 300},
 		{Id: 410, RoleId: 2, PermissionId: 310},
 		{Id: 411, RoleId: 2, PermissionId: 311},
 		{Id: 412, RoleId: 2, PermissionId: 312},
 		{Id: 413, RoleId: 2, PermissionId: 313},
+		/*
 		{Id: 430, RoleId: 2, PermissionId: 330},
 		{Id: 431, RoleId: 2, PermissionId: 331},
+		 */
 		/* 普通管理员*/
 		{Id: 1001, RoleId: 10, PermissionId: 1},
 		{Id: 1002, RoleId: 10, PermissionId: 2},
@@ -283,8 +312,10 @@ func initDbData() error {
 		{Id: 1092, RoleId: 10, PermissionId: 92},
 	}
 	if num, err := o.InsertMulti(len(rolePermissions), rolePermissions); err != nil {
-		beego.Warn("Init RolePermission data success num:", num, " error", err)
+		logs.Warn("Init RolePermission data success num:", num, " error", err)
 	}
-	o.Commit()
+	if err := o.Commit(); err != nil {
+		logs.Error("db initDbData orm Commit transaction err:", err)
+	}
 	return nil
 }

@@ -71,7 +71,7 @@ func (c *RegApiController) Post() {
 	// 验证用户名是否存在
 	o := orm.NewOrm()
 	if isExist := o.QueryTable(new(Member)).Filter("Username", model.Username).Exist(); isExist {
-		c.Msg = "手机号已存在"
+		c.Msg = "账号已存在"
 		return
 	}
 	// 查询层级
@@ -89,9 +89,9 @@ func (c *RegApiController) Post() {
 	c.Msg = "注册成功"
 	c.Code = utils.CODE_OK
 	c.Dta = map[string]interface{}{
-		"id":        model.Id,
-		"token":     token,
-		"phone":     model.Username,
+		"id":    model.Id,
+		"token": token,
+		//"phone":     model.Username, // 敏感信息尽量不在网络传输
 		"nickname":  model.Name,
 		"autoLogin": true,
 	}
@@ -107,7 +107,7 @@ func CreateMemberReg(appNo, appChannel string, appVersion int, refId int64, user
 	model.Username = username
 	model.ThirdAuthId = thirdAuthId
 	if name == "" {
-		if len(model.Username) == 11 {
+		if len(model.Username) == 11 && strings.HasPrefix(model.Username, "1") {
 			model.Mobile = model.Username
 			model.Name = SubString(model.Username, 0, 3) + "*****" + SubString(model.Username, 8, 3)
 		} else {

@@ -2,17 +2,18 @@ package member
 
 import (
 	"fmt"
-	"html/template"
 	"github.com/iufansh/iufans/controllers/sysmanage"
 	. "github.com/iufansh/iufans/models"
 	. "github.com/iufansh/iufans/utils"
 	. "github.com/iufansh/iutils"
+	"html/template"
+	"strconv"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/validation"
-	"time"
 	"strings"
+	"time"
 )
 
 func validate(member *Member) (hasError bool, errMsg string) {
@@ -82,7 +83,7 @@ func (c *MemberIndexController) Delone() {
 	}
 	o := orm.NewOrm()
 	if _, err := o.Delete(&Member{Id: id}); err != nil {
-		beego.Error("Delete admin error 2", err)
+		beego.Error("Delete member error 2", err)
 		msg = "删除失败"
 	} else {
 		code = 1
@@ -103,7 +104,7 @@ func (c *MemberIndexController) Locked() {
 	o := orm.NewOrm()
 	model := Member{Id: id}
 	if err := o.Read(&model); err != nil {
-		beego.Error("Read admin error", err)
+		beego.Error("Read member error", err)
 		msg = "操作失败，请刷新后重试"
 		return
 	}
@@ -117,7 +118,7 @@ func (c *MemberIndexController) Locked() {
 	}
 
 	if _, err := o.Update(&model, "Locked", "LockedDate", "LoginFailureCount"); err != nil {
-		beego.Error("Update admin error", err)
+		beego.Error("Update member error", err)
 		msg = "操作失败，请刷新后重试"
 	} else {
 		code = 1
@@ -139,15 +140,15 @@ func (c *MemberEditController) NestPrepare() {
 func (c *MemberEditController) Get() {
 	id, _ := c.GetInt64("id")
 	o := orm.NewOrm()
-	admin := Member{Id: id}
+	member := Member{Id: id}
 
-	err := o.Read(&admin)
+	err := o.Read(&member)
 
 	if err == orm.ErrNoRows || err == orm.ErrMissPK {
 		c.Redirect(beego.URLFor("MemberIndexController.get"), 302)
 		return
 	}
-	c.Data["data"] = &admin
+	c.Data["data"] = &member
 
 	c.Data["urlMemberIndexGet"] = c.URLFor("MemberIndexController.Get")
 	c.Data["urlMemberEditPost"] = c.URLFor("MemberEditController.Post")
@@ -164,36 +165,44 @@ func (c *MemberEditController) Post() {
 	var msg string
 	var reurl = c.URLFor("MemberIndexController.Get")
 	defer sysmanage.Retjson(c.Ctx, &msg, &code, &reurl)
-	admin := Member{}
-	if err := c.ParseForm(&admin); err != nil {
+	member := Member{}
+	if err := c.ParseForm(&member); err != nil {
 		msg = "参数异常"
 		return
-	} else if hasError, errMsg := validate(&admin); hasError {
+	} else if hasError, errMsg := validate(&member); hasError {
 		msg = errMsg
 		return
-	} else if admin.Password != "" && admin.Password != c.GetString("repassword") {
+	} else if member.Password != "" && member.Password != c.GetString("repassword") {
 		msg = "两次输入的密码不一致"
 		return
 	}
 	o := orm.NewOrm()
 
-	cols := []string{"Name", "Vip", "Enabled", "ModifyDate"}
+	cols := []string{"Username", "Name", "Vip", "Enabled", "ModifyDate"}
 	isChangePwd := false
-	if admin.Password != "" {
+	if member.Password != "" {
 		salt := GetGuid()
-		admin.Password = Md5(admin.Password, Pubsalt, salt)
-		admin.Salt = salt
+		member.Password = Md5(member.Password, Pubsalt, salt)
+		member.Salt = salt
 		cols = append(cols, "Password", "Salt")
 		isChangePwd = true
 	}
-	admin.Modifior = c.LoginAdminId
-	if _, err := o.Update(&admin, cols...); err != nil {
+	if member.Cancelled == 1 {
+		member.Username = "aCancelled_" + strconv.FormatInt(member.Id, 10)
+		member.Password = "aCancelled"
+		member.ThirdAuthId = ""
+		member.Token = ""
+		cols = append(cols, "ThirdAuthId", "Password", "Cancelled", "Token")
+		isChangePwd = true
+	}
+	member.Modifior = c.LoginAdminId
+	if _, err := o.Update(&member, cols...); err != nil {
 		msg = "更新失败"
-		beego.Error("Update admin error 1", err)
+		beego.Error("Update member error 1", err)
 	} else {
 		// 如修改了密码，则重置登录，让用户必须重新登录
 		if isChangePwd {
-			DelCache(fmt.Sprintf("loginMemberId%d", admin.Id))
+			DelCache(fmt.Sprintf("loginMemberId%d", member.Id))
 		}
 		code = 1
 		msg = "更新成功"

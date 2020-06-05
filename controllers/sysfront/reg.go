@@ -1,16 +1,16 @@
 package sysfront
 
 import (
+	"github.com/astaxie/beego/logs"
 	fm "github.com/iufansh/iufans/models"
 	. "github.com/iufansh/iutils"
 
-	"github.com/astaxie/beego"
+	"fmt"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/validation"
-	"strings"
 	. "github.com/iufansh/iufans/models"
 	"github.com/iufansh/iufans/utils"
-	"fmt"
+	"strings"
 )
 
 type RegFrontController struct {
@@ -19,6 +19,12 @@ type RegFrontController struct {
 
 func (c *RegFrontController) Get() {
 	inviteCode := c.GetString("ic")
+	if inviteCode == "" {
+		icv := c.GetSession("invite_code")
+		if icv != nil {
+			inviteCode = icv.(string)
+		}
+	}
 	m := fm.GetSiteConfigMap(utils.Scname, utils.Scfrontregsmsverify)
 	c.Data["inviteCode"] = strings.TrimSpace(inviteCode)
 	c.Data["siteName"] = m[utils.Scname]
@@ -84,14 +90,33 @@ func (c *RegFrontController) Post() {
 	} else {
 		refId = 0
 	}
+	// 查询层级
+	if refId != 0 {
+		var refMem Member
+		if err := o.QueryTable(new(Member)).Filter("Id", refId).One(&refMem, "Levels"); err != nil {
+			logs.Error("member reg QueryTable Member err", err)
+			model.Levels = "0,"
+			model.RefId = 0
+		} else {
+			model.Levels = fmt.Sprintf("%s%d,", refMem.Levels, refId)
+			model.RefId = refId
+		}
+	} else {
+		model.Levels = "0,"
+		model.RefId = 0
+	}
+	if model.Name == "" {
+		if len(model.Username) == 11 && strings.HasPrefix(model.Username, "1") {
+			model.Mobile = model.Username
+			model.Name = SubString(model.Username, 0, 3) + "*****" + SubString(model.Username, 8, 3)
+		} else {
+			model.Name = model.Username
+		}
+	}
 	// 注册送积分
 	//integral, _ := strconv.ParseInt(scMap[utils.Scfrontregintegral], 10, 64)
 	salt := GetGuid()
 	pa := Md5(Md5(model.Password), Pubsalt, salt)
-	model.RefId = refId
-	if model.Name == "" {
-		model.Name = model.Username
-	}
 	model.Mobile = model.Username
 	model.Password = pa
 	model.Salt = salt
@@ -106,7 +131,7 @@ func (c *RegFrontController) Post() {
 	var err error
 	if memberId, err = o.Insert(&model); err != nil {
 		o.Rollback()
-		beego.Error("memberRegErr Member error", err)
+		logs.Error("memberRegErr Member error", err, memberId)
 		c.Msg = "注册失败，请重试(3)"
 		return
 	}
@@ -116,7 +141,7 @@ func (c *RegFrontController) Post() {
 	c.Code = 1
 	c.Dta = c.URLFor("LoginFrontController.Get")
 
-	go GenerateRandAvatar(memberId)
+	// go GenerateRandAvatar(memberId)
 	return
 }
 

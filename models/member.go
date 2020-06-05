@@ -15,10 +15,11 @@ type Member struct {
 	Version           int       // 版本
 	OrgId             int64     // 组织ID
 	RefId             int64     // 推荐人ID
+	Levels            string    // 层级关系
 	AppNo             string
 	AppChannel        string
 	AppVersion        int
-	Username          string
+	Username          string `orm:"unique"`
 	ThirdAuthId       string // 三方登录的ID, 比如微信的unionid，华为的AuthHuaweiId
 	Name              string
 	Mobile            string
@@ -34,6 +35,7 @@ type Member struct {
 	Enabled           int8
 	Token             string
 	TokenExpTime      time.Time `orm:"null"`
+	Cancelled         int8      // 是否注销 0-正常使用；1-已注销
 }
 
 func init() {

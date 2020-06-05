@@ -19,6 +19,7 @@ type LoginFrontController struct {
 }
 
 func (c *LoginFrontController) Get() {
+	c.Data["msg"] = c.GetString("msg", "")
 	c.Data["siteName"] = fm.GetSiteConfigValue(Scname)
 	c.Data["redirect"] = c.GetString("redirect")
 	c.TplName = "front/login.html"

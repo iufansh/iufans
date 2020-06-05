@@ -77,10 +77,8 @@ var tplIndex = `
 										{{end}}
 									</td>
 									<td>
-									{{if eq $vo.Status 0}}
 										<button type="button" href='{{$.urlMemberSuggestStatus}}?id={{$vo.Id}}&status=1' class="layui-btn layui-btn-xs ajax-feedback">接受建议</button>
 										<button type="button" href='{{$.urlMemberSuggestStatus}}?id={{$vo.Id}}&status=2' class="layui-btn layui-btn-danger layui-btn-xs ajax-feedback">拒绝建议</button>
-									{{end}}
 									</td>
 								</tr>
 							{{else}}

@@ -66,12 +66,11 @@ func (c *CommonController) SendSmsCode() {
 		Mobile:  to,
 		Company: companyName,
 	}
-	err := fu.SendSmsVerifyCode(ms)
+	msg, err := fu.SendSmsVerifyCode(ms)
 	if err != nil {
 		msg = err.Error()
 	} else {
 		code = 1
-		msg = "发送成功"
 	}
 }
 

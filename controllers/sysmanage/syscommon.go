@@ -4,6 +4,7 @@ import (
 	"fmt"
 	utils2 "github.com/iufansh/iufans/utils"
 	utils "github.com/iufansh/iutils"
+	"io"
 	"net/url"
 	"os"
 	"strconv"
@@ -74,6 +75,64 @@ func (c *SyscommonController) Upload() {
 		"size":     h.Size, // 单位：B
 		"md5Value": md5Value,
 	}
+}
+
+// 后台通用多文件上传接口，上传的文件默认保存于upload目录下。静态资源。
+func (c *SyscommonController) UploadMulti() {
+	defer c.RetJSON()
+	nameMode := c.GetString("nameMode", "0")
+	saveDir := c.GetString("saveDir")
+	fs, err := c.GetFiles("file")
+	if err != nil {
+		beego.Error("Syscommon UploadMulti file get file error", err)
+		c.Msg = "上传失败，请重试(1)"
+		return
+	}
+	var uploadPath string
+	if saveDir != "" {
+		uploadPath = strings.TrimPrefix(strings.TrimSuffix(saveDir, "/"), "/") + "/"
+	} else {
+		uploadPath = fmt.Sprintf("upload/%d/%s/%d/", time.Now().Year(), time.Now().Month().String(), time.Now().Day())
+	}
+	if flag, _ := utils.PathExists(uploadPath); !flag {
+		if err2 := os.MkdirAll(uploadPath, 0644); err2 != nil {
+			beego.Error("Syscommon UploadMulti file get file error", err2)
+			c.Msg = "上传失败，请重试(2)"
+			return
+		}
+	}
+
+	for _, file := range fs {
+		fName := url.QueryEscape(file.Filename)
+		var saveName string
+		if nameMode == "0" { // 随机名称
+			suffix := utils.SubString(fName, len(fName), strings.LastIndex(fName, ".")-len(fName))
+			saveName = utils.Md5(utils.GetGuid(), strconv.FormatInt(time.Now().UnixNano(), 16)) + suffix
+		} else {
+			saveName = fName
+		}
+
+		toFile := uploadPath + saveName
+
+		f, err := os.OpenFile(toFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		if err != nil {
+			beego.Error("Syscommon UploadMulti OpenFile error", err)
+			c.Msg = "上传失败，请重试(3)"
+			return
+		}
+		defer f.Close()
+		fi, err := file.Open()
+		if err != nil {
+			beego.Error("Syscommon UploadMulti file Open error", err)
+			c.Msg = "上传失败，请重试(4)"
+			return
+		}
+		defer fi.Close()
+		io.Copy(f, fi)
+	}
+
+	c.Msg = "上传成功"
+	c.Code = utils2.CODE_OK
 }
 
 func (c *SyscommonController) Download() {
