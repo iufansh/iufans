@@ -78,7 +78,7 @@ func (c *LoginApiController) Post() {
 			logs.Error("MemberLogin update login fail err:", err)
 		}
 		if member.LoginFailureCount >= 3 {
-			c.Msg = fmt.Sprintf("再错误%d次，将锁定账号", 6 - member.LoginFailureCount)
+			c.Msg = fmt.Sprintf("再错误%d次，将锁定账号", 6-member.LoginFailureCount)
 		}
 		c.Msg = "用户名或密码错误"
 		return
@@ -89,11 +89,13 @@ func (c *LoginApiController) Post() {
 	c.Code = code
 	c.Msg = msg
 	c.Dta = map[string]interface{}{
-		"id":        member.Id,
-		"token":     token,
-		"phone":     "", // 敏感信息尽量不在网络传输
-		"nickname":  member.Name,
-		"autoLogin": true,
+		"id":         member.Id,
+		"token":      token,
+		"phone":      "", // 敏感信息尽量不在网络传输
+		"nickname":   member.Name,
+		"autoLogin":  true,
+		"avatar":     member.Avatar,
+		"inviteCode": utils.GenInviteCode(member.Id),
 	}
 }
 
@@ -123,8 +125,6 @@ func (c *LoginApiController) Logout() {
 	o := orm.NewOrm()
 	if num, err := o.Update(&Member{Id: c.LoginMemberId, Token: ""}, "Token"); err != nil || num != 1 {
 		beego.Error("Member logout err:", err)
-		c.Msg = "退出失败"
-		return
 	}
 	c.Code = utils.CODE_OK
 	c.Msg = "退出成功"

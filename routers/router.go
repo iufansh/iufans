@@ -145,5 +145,6 @@ func init() {
 	beego.Router(apiRouter+"/checkupdate", &sysapi.AppVersionApiController{})
 	beego.Router(apiRouter+"/info", &sysapi.InformationApiController{})
 	beego.Router(apiRouter+"/normalqa", &sysapi.NormalQuestionApiController{})
+	beego.Router(apiRouter+"/sysconf", &sysapi.SysConfigApiController{})
 
 }

@@ -11,7 +11,7 @@ import (
 )
 
 type loginWxParam struct {
-	Code  string `json:"code"`
+	Code string `json:"code"`
 }
 
 type LoginWxApiController struct {
@@ -81,7 +81,7 @@ func (c *LoginWxApiController) Post() {
 		c.Msg = "用户查询异常"
 		return
 	} else if err == orm.ErrNoRows {
-		if member, err = CreateMemberReg(c.AppNo, c.AppChannel, c.AppVersionCode, 0, userInfo.Unionid, userInfo.Unionid, userInfo.Nickname, userInfo.Unionid); err != nil {
+		if member, err = CreateMemberReg(c.AppNo, c.AppChannel, c.AppVersionCode, 0, userInfo.Unionid, userInfo.Unionid, userInfo.Nickname, userInfo.Unionid, userInfo.Headimgurl); err != nil {
 			c.Msg = "登录失败，请重试"
 			return
 		}
@@ -94,11 +94,13 @@ func (c *LoginWxApiController) Post() {
 	c.Code = utils.CODE_OK
 	c.Msg = "登录成功"
 	c.Dta = map[string]interface{}{
-		"id":          member.Id,
-		"token":       token,
-		"phone":       "",
-		"nickname":    member.Name,
-		"autoLogin":   true,
+		"id":         member.Id,
+		"token":      token,
+		"phone":      "",
+		"nickname":   member.Name,
+		"autoLogin":  true,
+		"avatar":     member.Avatar,
+		"inviteCode": utils.GenInviteCode(member.Id),
 		// "accessToken": accessToken.AccessToken, // 微信access token
 	}
 }

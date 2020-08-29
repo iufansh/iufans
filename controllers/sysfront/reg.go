@@ -93,16 +93,19 @@ func (c *RegFrontController) Post() {
 	// 查询层级
 	if refId != 0 {
 		var refMem Member
-		if err := o.QueryTable(new(Member)).Filter("Id", refId).One(&refMem, "Levels"); err != nil {
+		if err := o.QueryTable(new(Member)).Filter("Id", refId).One(&refMem, "Levels", "LevelsDeep"); err != nil {
 			logs.Error("member reg QueryTable Member err", err)
 			model.Levels = "0,"
+			model.LevelsDeep = 1
 			model.RefId = 0
 		} else {
 			model.Levels = fmt.Sprintf("%s%d,", refMem.Levels, refId)
+			model.LevelsDeep = refMem.LevelsDeep + 1
 			model.RefId = refId
 		}
 	} else {
 		model.Levels = "0,"
+		model.LevelsDeep = 1
 		model.RefId = 0
 	}
 	if model.Name == "" {

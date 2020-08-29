@@ -1,11 +1,13 @@
 package sysapi
 
 import (
+	"fmt"
+	"github.com/astaxie/beego/httplib"
+	"github.com/astaxie/beego/logs"
 	fm "github.com/iufansh/iufans/models"
 	. "github.com/iufansh/iutils"
 
 	"encoding/json"
-	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/validation"
@@ -77,7 +79,7 @@ func (c *RegApiController) Post() {
 	// 查询层级
 	var refId = utils.ReverseInviteCode(p.InviteCode)
 
-	model, err := CreateMemberReg(c.AppNo, c.AppChannel, c.AppVersionCode, refId, model.Username, model.Password, model.Name, "")
+	model, err := CreateMemberReg(c.AppNo, c.AppChannel, c.AppVersionCode, refId, model.Username, model.Password, model.Name, "", "")
 	if err != nil {
 		c.Msg = "注册失败，请重试"
 		return
@@ -89,23 +91,29 @@ func (c *RegApiController) Post() {
 	c.Msg = "注册成功"
 	c.Code = utils.CODE_OK
 	c.Dta = map[string]interface{}{
-		"id":    model.Id,
-		"token": token,
-		//"phone":     model.Username, // 敏感信息尽量不在网络传输
-		"nickname":  model.Name,
-		"autoLogin": true,
+		"id":         model.Id,
+		"token":      token,
+		"nickname":   model.Name,
+		"autoLogin":  true,
+		"avatar":     model.Avatar,
+		"inviteCode": utils.GenInviteCode(model.Id),
 	}
 	// go GenerateRandAvatar(memberId)
 	return
 }
 
-func CreateMemberReg(appNo, appChannel string, appVersion int, refId int64, username string, password string, name string, thirdAuthId string) (model Member, err error) {
+func CreateMemberReg(appNo, appChannel string, appVersion int, refId int64, username string, password string, name string, thirdAuthId string, avatar string) (model Member, err error) {
 	model.AppNo = appNo
 	model.AppChannel = appChannel
 	model.AppVersion = appVersion
 	model.RefId = refId
 	model.Username = username
 	model.ThirdAuthId = thirdAuthId
+	if avatar == "" {
+		model.Avatar = "/static/front/images/avatar/default.png"
+	} else {
+		model.Avatar = avatar
+	}
 	if name == "" {
 		if len(model.Username) == 11 && strings.HasPrefix(model.Username, "1") {
 			model.Mobile = model.Username
@@ -132,20 +140,30 @@ func CreateMemberReg(appNo, appChannel string, appVersion int, refId int64, user
 		return model, err
 	}
 	model.Id = memberId
+	//缓存头像到本地
+	go GetMemberAvatar(memberId, model.Avatar)
 	return model, nil
 }
 
-// 生成一个随机头像
-func GenerateRandAvatar(id int64) {
-	/*
-		avatarRes := httplib.Get("https://api.uomg.com/api/rand.avatar?format=images")
-		avatar, err := avatarRes.String() // avatar是一个base64的数据。
-		fmt.Println(avatar)
-		if err != nil || !strings.HasPrefix(strings.ToLower(avatar), "http") {
-			avatar = "/static/front/images/avatar/0.jpg"
+// 获取头像
+func GetMemberAvatar(id int64, avatar string) {
+	//logs.Info(avatar)
+	var avatarFile string
+	// 网络图片，下载到本地缓存
+	if avatar != "" && strings.HasPrefix(strings.ToLower(avatar), "http") {
+		avatarFile = fmt.Sprintf("upload/avatar/%d.jpg", id)
+		if err := httplib.Get(avatar).ToFile(avatarFile); err != nil {
+			logs.Error("GetMemberAvatar err:", err)
+			return
 		}
-	*/
-	avatar := fmt.Sprintf("/static/front/images/avatar/%d.jpg", id%12)
+		avatarFile = "/" + avatarFile
+	} else {
+		if strings.HasPrefix(avatar, "/") {
+			avatarFile = avatar
+		} else {
+			avatarFile = "/" + avatar
+		}
+	}
 	o := orm.NewOrm()
-	o.Update(&Member{Id: id, Avatar: avatar}, "Avatar")
+	o.Update(&Member{Id: id, Avatar: avatarFile}, "Avatar")
 }

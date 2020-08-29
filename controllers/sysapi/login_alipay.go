@@ -25,7 +25,7 @@ import (
 )
 
 type loginAlipayParam struct {
-	Code  string `json:"code"`
+	Code string `json:"code"`
 }
 
 type LoginAlipayApiController struct {
@@ -186,7 +186,7 @@ func (c *LoginAlipayApiController) Post() {
 		} else {
 			nickName = resp.Response.NickName
 		}
-		if member, err = CreateMemberReg(c.AppNo, c.AppChannel, c.AppVersionCode, 0, resp.Response.UserId, resp.Response.UserId, nickName, resp.Response.UserId); err != nil {
+		if member, err = CreateMemberReg(c.AppNo, c.AppChannel, c.AppVersionCode, 0, resp.Response.UserId, resp.Response.UserId, nickName, resp.Response.UserId, resp.Response.Avatar); err != nil {
 			c.Msg = "登录失败，请重试"
 			return
 		}
@@ -198,11 +198,13 @@ func (c *LoginAlipayApiController) Post() {
 	c.Code = utils.CODE_OK
 	c.Msg = "登录成功"
 	c.Dta = map[string]interface{}{
-		"id":        member.Id,
-		"token":     token,
-		"phone":     "",
-		"nickname":  member.Name,
-		"autoLogin": true,
+		"id":         member.Id,
+		"token":      token,
+		"phone":      "",
+		"nickname":   member.Name,
+		"autoLogin":  true,
+		"avatar":     member.Avatar,
+		"inviteCode": utils.GenInviteCode(member.Id),
 		// "accessToken": rsp.Response.AccessToken, // access token
 	}
 }

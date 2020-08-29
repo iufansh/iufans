@@ -16,6 +16,7 @@ type Member struct {
 	OrgId             int64     // 组织ID
 	RefId             int64     // 推荐人ID
 	Levels            string    // 层级关系
+	LevelsDeep        int       // 层级深度
 	AppNo             string
 	AppChannel        string
 	AppVersion        int
@@ -26,6 +27,7 @@ type Member struct {
 	Password          string
 	Salt              string
 	Vip               int
+	VipTime           time.Time `orm:"null"` // 最近VIP获得时间
 	Avatar            string
 	Locked            int8
 	LockedDate        time.Time `orm:"null"`
