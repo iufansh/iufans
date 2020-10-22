@@ -12,6 +12,8 @@ const (
 	Scsmsuid            = "sms_uid"
 	Scsmskey            = "sms_key"
 	Scfrontregsmsverify = "front_reg_sms_verify"
+	ScBaiduApiKey       = "baidu_api_key"
+	ScBaiduSecretKey    = "baidu_secret_key"
 )
 
 var SiteConfigCodeMap = map[string]string{

@@ -61,7 +61,7 @@ func initRedis() {
 	}
 }
 
-func SetCache(key string, value interface{}, timeout int) error {
+func SetCache(key string, value interface{}, timeoutSecond int) error {
 	data, err := Encode(value)
 	if err != nil {
 		beego.Error("Set cache error:", err)
@@ -78,7 +78,7 @@ func SetCache(key string, value interface{}, timeout int) error {
 			//cc = nil
 		}
 	}()
-	timeouts := time.Duration(timeout) * time.Second
+	timeouts := time.Duration(timeoutSecond) * time.Second
 	err = cc.Put(key, data, timeouts)
 	if err != nil {
 		beego.Error("Set cache error:", err)

@@ -109,11 +109,11 @@ func CreateMemberReg(appNo, appChannel string, appVersion int, refId int64, user
 	model.RefId = refId
 	model.Username = username
 	model.ThirdAuthId = thirdAuthId
-	if avatar == "" {
-		model.Avatar = "/static/front/images/avatar/default.png"
-	} else {
-		model.Avatar = avatar
-	}
+	//if avatar == "" {
+	//	model.Avatar = "/static/front/images/avatar/default.png"
+	//} else {
+	//	model.Avatar = avatar
+	//}
 	if name == "" {
 		if len(model.Username) == 11 && strings.HasPrefix(model.Username, "1") {
 			model.Mobile = model.Username
@@ -141,7 +141,7 @@ func CreateMemberReg(appNo, appChannel string, appVersion int, refId int64, user
 	}
 	model.Id = memberId
 	//缓存头像到本地
-	go GetMemberAvatar(memberId, model.Avatar)
+	// go GetMemberAvatar(memberId, model.Avatar)
 	return model, nil
 }
 

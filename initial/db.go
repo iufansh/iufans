@@ -35,7 +35,7 @@ func InitSql() {
 		if nil != err {
 			port = 3306
 		}
-		dataSource = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&loc=%s", user, passwd, host, port, dbname, "Asia%2FShanghai")
+		dataSource = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&loc=%s", user, passwd, host, port, dbname, "Asia%2FShanghai")
 	} else if dbDriver == "sqlite3" {
 		if err := orm.RegisterDriver("sqlite3", orm.DRSqlite); err != nil {
 			logs.Error("orm.RegisterDriver sqlite3 err:", err)

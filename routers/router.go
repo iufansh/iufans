@@ -146,5 +146,6 @@ func init() {
 	beego.Router(apiRouter+"/info", &sysapi.InformationApiController{})
 	beego.Router(apiRouter+"/normalqa", &sysapi.NormalQuestionApiController{})
 	beego.Router(apiRouter+"/sysconf", &sysapi.SysConfigApiController{})
-
+	beego.Router(apiRouter+"/member/modifyname", &sysapi.MemberApiController{}, "post:ModifyName")
+	beego.Router(apiRouter+"/member/uploadavatar", &sysapi.MemberApiController{}, "post:UploadAvatar")
 }
