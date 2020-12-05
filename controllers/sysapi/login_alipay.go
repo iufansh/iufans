@@ -42,11 +42,15 @@ func (c *LoginAlipayApiController) Get() {
 	defer c.RetJSON()
 	o := orm.NewOrm()
 	var pc models.PaymentConfig
-	o.QueryTable(new(models.PaymentConfig)).Filter("AppNo", c.AppNo).Filter("PayType", utils.PayTypeAlipay).Limit(1).One(&pc)
+	if err := o.QueryTable(new(models.PaymentConfig)).Filter("AppNo", c.AppNo).Filter("PayType", utils.PayTypeAlipay).Limit(1).One(&pc); err != nil {
+		c.Msg = "登录异常(ALI01)"
+		logs.Error("LoginAlipayApiController QueryTable PaymentConfig err:", err)
+		return
+	}
 	var vo models.AlipayVo
 	if err := json.Unmarshal([]byte(pc.ConfValue), &vo); err != nil {
-		logs.Error("Unmarshal ConfValue err:", err)
-		c.Msg = "接口异常(ALI)"
+		c.Msg = "接口异常(ALI02)"
+		logs.Error("LoginAlipayApiController Unmarshal ConfValue err:", err)
 		return
 	}
 	bm := make(gopay.BodyMap)
@@ -67,7 +71,7 @@ func (c *LoginAlipayApiController) Get() {
 	sign, err := getRsaSign(bm, "RSA2", priKey)
 	if err != nil {
 		logs.Error("LoginAlipayApiController.Get getRsaSign err:", err)
-		c.Msg = "获取签名失败"
+		c.Msg = "获取签名失败(ALI03)"
 		return
 	}
 	logs.Info("LoginAlipayApiController.Get authInfo=", urlParam+"&"+sign)
@@ -138,23 +142,23 @@ func (c *LoginAlipayApiController) Post() {
 	var vo models.AlipayVo
 	if err := json.Unmarshal([]byte(pc.ConfValue), &vo); err != nil {
 		logs.Error("Unmarshal ConfValue err:", err)
-		c.Msg = "接口异常(ALI)"
+		c.Msg = "接口异常(ALI11)"
 		return
 	}
 	// 获取access token
-	rsp, err := alipay.SystemOauthToken(pc.AppId, vo.PriKey, "authorization_code", p.Code, "RSA2")
+	rsp, err := alipay.SystemOauthToken(pc.AppId, alipay.PKCS1, vo.PriKey, "authorization_code", p.Code, "RSA2")
 	logs.Info("alipay.SystemOauthToken rsp=", fmt.Sprintf("%+v", rsp))
 	if err != nil {
 		logs.Error("alipay.SystemOauthToken err:", err)
-		c.Msg = "授权异常(ALI1)"
+		c.Msg = "授权异常(ALI12)"
 		return
 	} else if rsp.ErrorResponse != nil && rsp.ErrorResponse.Code != "10000" {
 		logs.Error("alipay.SystemOauthToken err:", rsp.ErrorResponse)
-		c.Msg = "信息获取失败(ALI3)"
+		c.Msg = "信息获取失败(ALI13)"
 		return
 	} else if rsp.Response == nil || rsp.Response.UserId == "" {
 		logs.Error("alipay.SystemOauthToken err:", rsp.ErrorResponse)
-		c.Msg = "信息获取失败(ALI4)"
+		c.Msg = "信息获取失败(ALI14)"
 		return
 	}
 	var member models.Member
@@ -173,11 +177,11 @@ func (c *LoginAlipayApiController) Post() {
 		logs.Info("alipay.UserInfoShare rsp=", resp)
 		if err != nil {
 			logs.Error("alipay.UserInfoShare err:", err)
-			c.Msg = "授权异常(ALI2)"
+			c.Msg = "授权异常(ALI15)"
 			return
 		} else if resp.Response.Code != "10000" {
 			logs.Error("alipay.UserInfoShare err:", resp.Response)
-			c.Msg = "信息获取失败(ALI3)"
+			c.Msg = "信息获取失败(ALI16)"
 			return
 		}
 		var nickName string
@@ -200,7 +204,7 @@ func (c *LoginAlipayApiController) Post() {
 	c.Dta = map[string]interface{}{
 		"id":         member.Id,
 		"token":      token,
-		"phone":      "",
+		"phone":      member.GetFmtMobile(),
 		"nickname":   member.Name,
 		"autoLogin":  true,
 		"avatar":     member.Avatar,

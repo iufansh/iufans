@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
-	"github.com/iGoogle-ink/gopay"
 	"github.com/iGoogle-ink/gopay/wechat"
 	"github.com/iufansh/iufans/models"
 	"github.com/iufansh/iufans/utils"
@@ -38,22 +37,26 @@ func (c *LoginWxApiController) Post() {
 	}
 	o := orm.NewOrm()
 	var pc models.PaymentConfig
-	o.QueryTable(new(models.PaymentConfig)).Filter("AppNo", c.AppNo).Filter("PayType", utils.PayTypeWechatPay).Limit(1).One(&pc)
+	if err := o.QueryTable(new(models.PaymentConfig)).Filter("AppNo", c.AppNo).Filter("PayType", utils.PayTypeWechatPay).Limit(1).One(&pc); err != nil {
+		c.Msg = "登录异常(WX01)"
+		logs.Error("LoginWxApiController QueryTable PaymentConfig err:", err)
+		return
+	}
 	var vo models.WechatVo
 	if err := json.Unmarshal([]byte(pc.ConfValue), &vo); err != nil {
-		logs.Error("Unmarshal ConfValue err:", err)
-		c.Msg = "接口异常(1)"
+		logs.Error("LoginWxApiController Unmarshal ConfValue err:", err)
+		c.Msg = "接口异常(WX02)"
 		return
 	}
 	// 获取access token
-	accessToken, err := wechat.GetAppLoginAccessToken(pc.AppId, vo.AppSecret, p.Code)
+	accessToken, err := wechat.GetOauth2AccessToken(pc.AppId, vo.AppSecret, p.Code)
 	//logs.Info("accessToken:", fmt.Sprintf("%+v", accessToken))
 	if err != nil {
-		logs.Error("wechat.GetAppLoginAccessToken err:", err)
+		logs.Error("LoginWxApiController wechat.GetOauth2AccessToken err:", err)
 		c.Msg = "Access Token获取异常"
 		return
 	} else if accessToken.Errcode > 0 || accessToken.Errmsg != "" {
-		logs.Error("wechat.GetAppLoginAccessToken err:", accessToken.Errmsg)
+		logs.Error("LoginWxApiController wechat.GetOauth2AccessToken err:", accessToken.Errmsg)
 		c.Msg = "Access Token获取失败"
 		return
 	} else if accessToken.Unionid == "" {
@@ -61,15 +64,12 @@ func (c *LoginWxApiController) Post() {
 		return
 	}
 	// 获取用户信息
-	userInfo, err := GetUserInfo(accessToken.AccessToken, accessToken.Openid)
+	// userInfo, err := getUserInfo(accessToken.AccessToken, accessToken.Openid)
+	userInfo, err := wechat.GetOauth2UserInfo(accessToken.AccessToken, accessToken.Openid)
 	//logs.Info("userInfo:", fmt.Sprintf("%+v", userInfo))
 	if err != nil {
-		logs.Error("wechat.GetUserInfo err:", err)
+		logs.Error("LoginWxApiController wechat.GetUserInfo err:", err)
 		c.Msg = "用户信息获取异常"
-		return
-	} else if userInfo.Errcode > 0 || userInfo.Errmsg != "" {
-		logs.Error("wechat.GetUserInfo err:", userInfo.Errmsg)
-		c.Msg = "用户信息获取失败"
 		return
 	} else if userInfo.Unionid == "" {
 		c.Msg = "用户信息获取失败"
@@ -77,7 +77,7 @@ func (c *LoginWxApiController) Post() {
 	}
 	var member models.Member
 	if err := o.QueryTable(new(models.Member)).Filter("ThirdAuthId", userInfo.Unionid).Limit(1).One(&member); err != nil && err != orm.ErrNoRows {
-		logs.Error("QueryTable Member err:", err)
+		logs.Error("LoginWxApiController QueryTable Member err:", err)
 		c.Msg = "用户查询异常"
 		return
 	} else if err == orm.ErrNoRows {
@@ -96,7 +96,7 @@ func (c *LoginWxApiController) Post() {
 	c.Dta = map[string]interface{}{
 		"id":         member.Id,
 		"token":      token,
-		"phone":      "",
+		"phone":      member.GetFmtMobile(),
 		"nickname":   member.Name,
 		"autoLogin":  true,
 		"avatar":     member.Avatar,
@@ -110,15 +110,16 @@ func (c *LoginWxApiController) Post() {
 //    openId：用户的OpenID
 //    lang:默认为 zh_CN ，可选填 zh_CN 简体，zh_TW 繁体，en 英语
 //    获取用户基本信息(UnionID机制)文档：https://developers.weixin.qq.com/doc/oplatform/Mobile_App/WeChat_Login/Authorized_API_call_UnionID.html
-func GetUserInfo(accessToken, openId string, lang ...string) (userInfo *wechat.UserInfo, err error) {
-	userInfo = new(wechat.UserInfo)
-	url := "https://api.weixin.qq.com/sns/userinfo?access_token=" + accessToken + "&openid=" + openId + "&lang=zh_CN"
-	if len(lang) > 0 {
-		url = "https://api.weixin.qq.com/sns/userinfo?access_token=" + accessToken + "&openid=" + openId + "&lang=" + lang[0]
-	}
-	_, errs := gopay.NewHttpClient().Get(url).EndStruct(userInfo)
-	if len(errs) > 0 {
-		return nil, errs[0]
-	}
-	return userInfo, nil
-}
+//func getUserInfo(accessToken, openId string, lang ...string) (userInfo *wechat.Oauth2UserInfo, err error) {
+//	wechat.GetOauth2UserInfo()
+//
+//	url := "https://api.weixin.qq.com/sns/userinfo?access_token=" + accessToken + "&openid=" + openId + "&lang=zh_CN"
+//	if len(lang) > 0 {
+//		url = "https://api.weixin.qq.com/sns/userinfo?access_token=" + accessToken + "&openid=" + openId + "&lang=" + lang[0]
+//	}
+//	_, errs := gopay.NewHttpClient().Get(url).EndStruct(userInfo)
+//	if len(errs) > 0 {
+//		return nil, errs[0]
+//	}
+//	return userInfo, nil
+//}

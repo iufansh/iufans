@@ -2,16 +2,17 @@ package login
 
 import (
 	"fmt"
-	"html/template"
-	. "github.com/iufansh/iufans/models"
-	"github.com/iufansh/iufans/controllers/sysmanage"
-	. "github.com/iufansh/iutils"
-	"time"
-	. "github.com/iufansh/iufans/utils"
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
+	"github.com/iufansh/iufans/controllers/sysmanage"
+	. "github.com/iufansh/iufans/models"
+	. "github.com/iufansh/iufans/utils"
 	"github.com/iufansh/iuplugins/googleauth"
+	. "github.com/iufansh/iutils"
+	"html/template"
 	"net/http"
+	"time"
 )
 
 type LoginController struct {
@@ -19,7 +20,7 @@ type LoginController struct {
 }
 
 func (c *LoginController) Get() {
-	beego.Warn("Login Get from ip:", c.Ctx.Input.IP())
+	logs.Warn("Login Get from ip:", c.Ctx.Input.IP())
 	if beego.BConfig.RunMode == "dev" {
 		c.Data["username"] = "admin"
 		c.Data["pass"] = "111111"
@@ -36,12 +37,25 @@ func (c *LoginController) Get() {
 	c.Data["urlLoginPost"] = c.URLFor("LoginController.Post")
 	c.Data["urlLoginVerify"] = c.URLFor("LoginController.LoginVerify")
 
+	// 登录页面模板
+	var tpl string
+	loginTpl := beego.AppConfig.DefaultInt("adminlogintpl", -1)
+	switch loginTpl {
+	case 0:
+		tpl = tplLogin
+		break
+	default:
+		tpl = tplLoginV1
+	}
+
 	if t, err := template.New("tplLogin.tpl").Funcs(map[string]interface{}{
 		"create_captcha": GetCpt().CreateCaptchaHTML,
-	}).Parse(tplLogin); err != nil {
-		beego.Error("template Parse err", err)
+	}).Parse(tpl); err != nil {
+		logs.Error("template Parse err", err)
 	} else {
-		t.Execute(c.Ctx.ResponseWriter, c.Data)
+		if err := t.Execute(c.Ctx.ResponseWriter, c.Data); err != nil {
+			logs.Error("LoginController.Get execute response err:", err)
+		}
 	}
 }
 
@@ -49,9 +63,9 @@ func (c *LoginController) Post() {
 	ret := make(map[string]interface{})
 	username := c.GetString("username")
 	pwd := c.GetString("password")
-	beego.Info("Login username=", username, "password=", pwd)
+	logs.Info("Login username=", username, "password=", pwd)
 	defer func() {
-		beego.Warn("LoginRequest from Ip:", c.Ctx.Input.IP(), "账号:", username, "结果:", ret["msg"])
+		logs.Warn("LoginRequest from Ip:", c.Ctx.Input.IP(), "账号:", username, "结果:", ret["msg"])
 		c.Data["json"] = &ret
 		c.ServeJSON()
 	}()
@@ -70,7 +84,7 @@ func (c *LoginController) Post() {
 	o := orm.NewOrm()
 	admin := Admin{Username: username}
 	if err := o.Read(&admin, "Username"); err != nil {
-		beego.Error("Login error", err)
+		logs.Error("Login error", err)
 		ret["msg"] = "用户名或密码错误"
 		return
 	}
@@ -90,7 +104,9 @@ func (c *LoginController) Post() {
 			cols = append(cols, "Locked")
 		}
 		cols = append(cols, "LoginFailureCount")
-		o.Update(&admin, cols...)
+		if _, err := o.Update(&admin, cols...); err != nil {
+			logs.Error("Login update admin err:", err)
+		}
 
 		ret["msg"] = "用户名或密码错误"
 		return
@@ -133,7 +149,10 @@ func (c *LoginController) Post() {
 	if err != nil {
 		lifeTime = 3600
 	}
-	SetCache(fmt.Sprintf("loginAdminId%d", admin.Id), token, lifeTime)
+	if err := SetCache(fmt.Sprintf("loginAdminId%d", admin.Id), token, lifeTime); err != nil {
+		ret["msg"] = "登录失败C1"
+		return
+	}
 	c.SetSession("token", token)
 	c.SetSession("loginAdminId", admin.Id)
 	c.SetSession("loginAdminOrgId", admin.OrgId)
@@ -143,7 +162,13 @@ func (c *LoginController) Post() {
 	admin.LoginFailureCount = 0
 	admin.LoginIp = c.Ctx.Input.IP()
 	admin.LoginDate = time.Now()
-	o.Update(&admin, "LoginFailureCount", "LoginIp", "LoginDate")
+	if num, err := o.Update(&admin, "LoginFailureCount", "LoginIp", "LoginDate"); err != nil {
+		ret["msg"] = "登录失败U1"
+		return
+	} else if num != 1 {
+		ret["msg"] = "登录失败N1"
+		return
+	}
 
 	ret["code"] = 1
 	ret["msg"] = "登录成功"
@@ -153,11 +178,11 @@ func (c *LoginController) Post() {
 func (c *LoginController) LoginVerify() {
 	var code int
 	var msg string
-	var reurl string
+	var reUrl string
 	username := c.GetString("username")
 	defer func() {
-		sysmanage.Retjson(c.Ctx, &msg, &code, &reurl)
-		beego.Warn("LoginVerify from Ip:", c.Ctx.Input.IP(), "账号:", username, "结果:", msg)
+		sysmanage.Retjson(c.Ctx, &msg, &code, &reUrl)
+		logs.Warn("LoginVerify from Ip:", c.Ctx.Input.IP(), "账号:", username, "结果:", msg)
 	}()
 	verifyCode := c.GetString("code")
 	verifyType, _ := c.GetInt("verify", 2)
@@ -186,7 +211,10 @@ func (c *LoginController) LoginVerify() {
 	if err != nil {
 		lifeTime = 3600
 	}
-	SetCache(fmt.Sprintf("loginAdminId%d", admin.Id), token, lifeTime)
+	if err := SetCache(fmt.Sprintf("loginAdminId%d", admin.Id), token, lifeTime); err != nil {
+		msg = "登录失败C2"
+		return
+	}
 	c.SetSession("token", token)
 	c.SetSession("loginAdminId", admin.Id)
 	c.SetSession("loginAdminOrgId", admin.OrgId)
@@ -196,15 +224,23 @@ func (c *LoginController) LoginVerify() {
 	admin.LoginFailureCount = 0
 	admin.LoginIp = c.Ctx.Input.IP()
 	admin.LoginDate = time.Now()
-	o.Update(&admin, "LoginFailureCount", "LoginIp", "LoginDate")
+	if num, err := o.Update(&admin, "LoginFailureCount", "LoginIp", "LoginDate"); err != nil {
+		msg= "登录失败U2"
+		return
+	} else if num != 1 {
+		msg = "登录失败N2"
+		return
+	}
 
 	code = 1
 	msg = "验证成功"
-	reurl = c.URLFor("BaseIndexController.Get")
+	reUrl = c.URLFor("BaseIndexController.Get")
 }
 
 func (c *LoginController) Logout() {
-	DelCache(fmt.Sprintf("loginAdminId%v", c.GetSession("loginAdminId")))
+	if err := DelCache(fmt.Sprintf("loginAdminId%v", c.GetSession("loginAdminId"))); err != nil {
+		logs.Error("LoginController.Logout DelCache err:", err)
+	}
 	c.DelSession("token")
 	c.DelSession("loginAdminId")
 	c.DelSession("loginAdminOrgId")

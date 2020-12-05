@@ -2,6 +2,7 @@ package sysmanage
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	utils2 "github.com/iufansh/iufans/utils"
 	utils "github.com/iufansh/iutils"
 	"io"
@@ -10,8 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/astaxie/beego"
 )
 
 type SyscommonController struct {
@@ -27,7 +26,7 @@ func (c *SyscommonController) Upload() {
 	f, h, err := c.GetFile("file")
 	defer f.Close()
 	if err != nil {
-		beego.Error("Syscommon upload file get file error", err)
+		logs.Error("Syscommon upload file get file error", err)
 		c.Msg = "上传失败，请重试(1)"
 		return
 	}
@@ -39,13 +38,13 @@ func (c *SyscommonController) Upload() {
 	}
 	if flag, _ := utils.PathExists(uploadPath); !flag {
 		if err2 := os.MkdirAll(uploadPath, 0644); err2 != nil {
-			beego.Error("Syscommon upload file get file error", err2)
+			logs.Error("Syscommon upload file get file error", err2)
 			c.Msg = "上传失败，请重试(2)"
 			return
 		}
 	}
 
-	fName := url.QueryEscape(h.Filename)
+	fName := utils.DeleteAllSpace(h.Filename) // 去除所有空格
 	suffix := utils.SubString(fName, len(fName), strings.LastIndex(fName, ".")-len(fName))
 	var saveName string
 	if nameMode == "0" { // 随机名称
@@ -58,7 +57,7 @@ func (c *SyscommonController) Upload() {
 	uploadName := uploadPath + saveName
 	err3 := c.SaveToFile("file", uploadName)
 	if err3 != nil {
-		beego.Error("Syscommon upload file save file error2", err3)
+		logs.Error("Syscommon upload file save file error2", err3)
 		c.Msg = "上传失败，请重试(3)"
 		return
 	}
@@ -84,7 +83,7 @@ func (c *SyscommonController) UploadMulti() {
 	saveDir := c.GetString("saveDir")
 	fs, err := c.GetFiles("file")
 	if err != nil {
-		beego.Error("Syscommon UploadMulti file get file error", err)
+		logs.Error("Syscommon UploadMulti file get file error", err)
 		c.Msg = "上传失败，请重试(1)"
 		return
 	}
@@ -96,7 +95,7 @@ func (c *SyscommonController) UploadMulti() {
 	}
 	if flag, _ := utils.PathExists(uploadPath); !flag {
 		if err2 := os.MkdirAll(uploadPath, 0644); err2 != nil {
-			beego.Error("Syscommon UploadMulti file get file error", err2)
+			logs.Error("Syscommon UploadMulti file get file error", err2)
 			c.Msg = "上传失败，请重试(2)"
 			return
 		}
@@ -116,14 +115,14 @@ func (c *SyscommonController) UploadMulti() {
 
 		f, err := os.OpenFile(toFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 		if err != nil {
-			beego.Error("Syscommon UploadMulti OpenFile error", err)
+			logs.Error("Syscommon UploadMulti OpenFile error", err)
 			c.Msg = "上传失败，请重试(3)"
 			return
 		}
 		defer f.Close()
 		fi, err := file.Open()
 		if err != nil {
-			beego.Error("Syscommon UploadMulti file Open error", err)
+			logs.Error("Syscommon UploadMulti file Open error", err)
 			c.Msg = "上传失败，请重试(4)"
 			return
 		}

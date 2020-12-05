@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"github.com/astaxie/beego/logs"
 	"time"
 
 	"github.com/astaxie/beego"
@@ -24,7 +25,7 @@ func InitCache() {
 		initFile()
 	}
 	if cc != nil {
-		beego.Info("Init cache success!!")
+		logs.Info("Init cache success!!")
 	}
 }
 
@@ -32,7 +33,7 @@ func initFile() {
 	var err error
 	cc, err = cache.NewCache("file", `{"CachePath":"./tmp/cache","FileSuffix":".cache","DirectoryLevel":"2","EmbedExpiry":"180"}`)
 	if err != nil {
-		beego.Error("New file cache error", err)
+		logs.Error("New file cache error", err)
 	}
 }
 
@@ -40,7 +41,7 @@ func initMemory() {
 	var err error
 	cc, err = cache.NewCache("memory", `{"interval":"180"}`)
 	if err != nil {
-		beego.Error("New memory cache error", err)
+		logs.Error("New memory cache error", err)
 	}
 }
 
@@ -57,31 +58,31 @@ func initRedis() {
 	cc, err = cache.NewCache("redis", `{"key":"`+key+`","conn":"`+conn+`","password":"`+password+`"}`)
 
 	if err != nil {
-		beego.Error("New redis cache error", err)
+		logs.Error("New redis cache error", err)
 	}
 }
 
 func SetCache(key string, value interface{}, timeoutSecond int) error {
 	data, err := Encode(value)
 	if err != nil {
-		beego.Error("Set cache error:", err)
+		logs.Error("Set cache error:", err)
 		return err
 	}
 	if cc == nil {
-		beego.Error("Set cache error cache is nil")
+		logs.Error("Set cache error cache is nil")
 		return errors.New("cc is nil")
 	}
 
 	defer func() {
 		if r := recover(); r != nil {
-			beego.Error("recover cache error:", r)
+			logs.Error("recover cache error:", r)
 			//cc = nil
 		}
 	}()
 	timeouts := time.Duration(timeoutSecond) * time.Second
 	err = cc.Put(key, data, timeouts)
 	if err != nil {
-		beego.Error("Set cache error:", err)
+		logs.Error("Set cache error:", err)
 		return err
 	} else {
 		return nil
@@ -90,25 +91,25 @@ func SetCache(key string, value interface{}, timeoutSecond int) error {
 
 func GetCache(key string, to interface{}) error {
 	if cc == nil {
-		beego.Error("Get cache error cache is nil")
+		logs.Error("Get cache error cache is nil")
 		return errors.New("cc is nil")
 	}
 
 	defer func() {
 		if r := recover(); r != nil {
-			beego.Error("recover cache error:", r)
+			logs.Error("recover cache error:", r)
 			//cc = nil
 		}
 	}()
 
 	data := cc.Get(key)
 	if data == nil {
-		beego.Warn("Get cache warn Cache不存在")
+		logs.Warn("Get cache warn Cache不存在")
 		return nil
 	}
 	err := Decode(data.([]byte), to)
 	if err != nil {
-		beego.Error(err)
+		logs.Error(err)
 	}
 
 	return err
@@ -116,20 +117,20 @@ func GetCache(key string, to interface{}) error {
 
 func DelCache(key string) error {
 	if cc == nil {
-		beego.Error("Delete cache error cache is nil")
+		logs.Error("Delete cache error cache is nil")
 		return errors.New("cc is nil")
 	}
 
 	defer func() {
 		if r := recover(); r != nil {
-			beego.Error("recover cache error:", r)
+			logs.Error("recover cache error:", r)
 			//cc = nil
 		}
 	}()
 
 	err := cc.Delete(key)
 	if err != nil {
-		beego.Error("Delete cache error", err)
+		logs.Error("Delete cache error", err)
 		return err
 	} else {
 		return nil
@@ -156,7 +157,7 @@ func Encode(data interface{}) ([]byte, error) {
 //
 func Decode(data []byte, to interface{}) error {
 	if len(data) == 0 {
-		beego.Info("Decode data is empty")
+		logs.Info("Decode data is empty")
 		return nil
 	}
 	buf := bytes.NewBuffer(data)

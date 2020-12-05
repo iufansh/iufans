@@ -1,16 +1,18 @@
 package sysmanage
 
 import (
+	"bytes"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
-	. "github.com/iufansh/iufans/models"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
 	pagination2 "github.com/astaxie/beego/utils/pagination"
+	"github.com/iufansh/iufans/controllers"
+	. "github.com/iufansh/iufans/models"
 	"github.com/iufansh/iufans/utils"
 	"html/template"
-	"bytes"
-	"github.com/iufansh/iufans/controllers"
 	"net/http"
+	"strconv"
 )
 
 type NestPreparer interface {
@@ -26,7 +28,6 @@ type BaseController struct {
 }
 
 func (c *BaseController) Prepare() {
-
 	beego.Info("\r\n----------request---------",
 		"\r\nUri:", c.Ctx.Input.URI(),
 		"\r\nMethod:", c.Ctx.Input.Method(),
@@ -51,6 +52,30 @@ func (c *BaseController) Prepare() {
 	if app, ok := c.AppController.(NestPreparer); ok {
 		app.NestPrepare()
 	}
+}
+
+// 获取URI上的id
+func (c *BaseController) GetModelId() int64 {
+	idStr := c.Ctx.Input.Param(":id")
+	id, _ := strconv.ParseInt(idStr, 0, 64)
+	return id
+}
+
+// limit, page, offset (default is 10, 1, 0)
+func (c *BaseController) GetPaginateParam() (limit, page int, offset int64) {
+	if v, err := c.GetInt64("limit"); err == nil && v > 0 {
+		limit = int(v)
+	} else {
+		limit = 10
+	}
+	if v, err := c.GetInt64("p"); err == nil && v > 0 {
+		page = int(v)
+	} else {
+		page = 1
+	}
+	offset = (int64(page) - 1) * int64(limit)
+	logs.Debug("BaseController.GetPaginateParam limit=", limit, "page=", page, "offset=", offset)
+	return
 }
 
 // Deprecated TODO 改方法废弃
@@ -103,7 +128,7 @@ var pagination = `
 func (c *BaseController) SetPaginator(per int, nums int64) {
 	paginator := pagination2.NewPaginator(c.Ctx.Request, per, nums)
 	if t, err := template.New("Pagination.tpl").Parse(pagination); err != nil {
-		beego.Error("filterAfterExec err3", err)
+		logs.Error("filterAfterExec err3", err)
 	} else {
 		var buf bytes.Buffer
 		t.Execute(&buf, map[string]interface{}{
@@ -111,6 +136,10 @@ func (c *BaseController) SetPaginator(per int, nums int64) {
 		})
 		c.Data["Pagination"] = template.HTML(buf.String())
 	}
+}
+
+func (c *BaseController) SetTplCondition(cond map[string]string) {
+	c.Data["cond"] = cond
 }
 
 type BaseIndexController struct {
@@ -128,7 +157,7 @@ func (c *BaseIndexController) Get() {
 	var permissions []Permission
 	_, err := o.Raw(sql, c.LoginAdminId).QueryRows(&permissions)
 	if err != nil {
-		beego.Error("Query admin permission error", err)
+		logs.Error("Query admin permission error", err)
 		c.Abort("内部错误，请重试")
 	} else {
 		var mainMenuList []Permission
@@ -160,7 +189,7 @@ func (c *BaseIndexController) Get() {
 		"urlfor": beego.URLFor,
 		"substr": beego.Substr,
 	}).Parse(tplBase); err != nil {
-		beego.Error("template Parse err", err)
+		logs.Error("template Parse err", err)
 	} else {
 		t.Execute(c.Ctx.ResponseWriter, c.Data)
 	}

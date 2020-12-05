@@ -3,7 +3,6 @@ package sysapi
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/validation"
@@ -59,7 +58,7 @@ func (c *MemberApiController) BindPhone() {
 	}
 	valid := validation.Validation{}
 	valid.Required(model.Username, "errmsg").Message("手机号必填")
-	valid.MaxSize(model.Username, 11, "errmsg").Message("手机号最长11位")
+	valid.Length(model.Username, 11, "errmsg").Message("手机号必须是11位数字")
 	valid.Required(model.Password, "errmsg").Message("密码必填")
 	valid.Length(model.Password, 32, "errmsg").Message("密码格式错误")
 	if valid.HasErrors() {
@@ -71,7 +70,7 @@ func (c *MemberApiController) BindPhone() {
 	// 验证用户名是否存在
 	o := orm.NewOrm()
 	if isExist := o.QueryTable(new(Member)).Filter("Username", model.Username).Exist(); isExist {
-		c.Msg = "当前手机号已存在账号，请换其他手机号"
+		c.Msg = "当前手机号已被绑定，请换其他手机号"
 		return
 	}
 
@@ -79,7 +78,6 @@ func (c *MemberApiController) BindPhone() {
 	model.Password = Md5(model.Password, Pubsalt, salt)
 	model.Salt = salt
 	model.Mobile = model.Username
-
 	model.Id = c.LoginMemberId
 
 	if num, err := o.Update(&model, "Username", "Mobile", "Password", "Salt"); err != nil || num != 1 {
@@ -89,7 +87,7 @@ func (c *MemberApiController) BindPhone() {
 
 	c.Msg = "绑定成功"
 	c.Code = utils.CODE_OK
-	c.Dta = "绑定成功"
+	c.Dta = model.GetFmtMobile()
 }
 
 /*
@@ -142,10 +140,13 @@ func (c *MemberApiController) ModifyName() {
 		c.Msg = "参数格式错误"
 		return
 	}
-	p.Name = DeleteExtraSpace(strings.TrimSpace(p.Name))
+	// 去除所有空格
+	p.Name = strings.ReplaceAll(DeleteExtraSpace(strings.TrimSpace(p.Name)), " ", "")
+	p.Name = strings.ReplaceAll(p.Name, "<", "")
+	p.Name = strings.ReplaceAll(p.Name, ">", "")
 	if p.Name == "" {
 		c.Code = utils.CODE_ERROR
-		c.Msg = "昵称必须填写，并且不能为空格"
+		c.Msg = "昵称必须填写"
 		return
 	}
 	if len(p.Name) > 20 {
@@ -194,7 +195,7 @@ func (c *MemberApiController) ModifyName() {
 	o := orm.NewOrm()
 	member := Member{
 		Id:   c.LoginMemberId,
-		Name: beego.Htmlquote(p.Name),
+		Name: p.Name,
 	}
 	if num, err := o.Update(&member, "Name"); err != nil || num != 1 {
 		c.Msg = "修改失败，请重试"

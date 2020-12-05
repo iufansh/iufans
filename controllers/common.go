@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/astaxie/beego/logs"
 	fu "github.com/iufansh/iufans/utils"
 	"time"
 
@@ -14,12 +15,12 @@ type CommonController struct {
 	beego.Controller
 }
 
-// 发送短信验证码，front和api使用
+// 发送短信验证码，front和api使用 1分钟有效
 // 请求：get
 // 参数：mobile=手机号&mode=1
 // mode=1验证手机号不存在则返回异常；mode=2不验证手机号是否存在；mode=3验证手机号已存在则返回异常
 func (c *CommonController) SendSmsCode() {
-	beego.Info("\r\n----------request---------",
+	logs.Info("\r\n----------request---------",
 		"\r\nUri:", c.Ctx.Input.URI(),
 		"\r\nMethod:", c.Ctx.Input.Method(),
 		"\r\nFrom ip:", c.Ctx.Input.IP(),
@@ -66,16 +67,35 @@ func (c *CommonController) SendSmsCode() {
 		Mobile:  to,
 		Company: companyName,
 	}
-	msg, err := fu.SendSmsVerifyCode(ms)
+	verifyCode, err := fu.SendSmsVerifyCode(ms)
+	var status int
 	if err != nil {
 		msg = err.Error()
+		status = 3
 	} else {
 		code = 1
+		msg = "发送成功"
+		status = 2
 	}
+	// 短信发送记录
+	go func(appInfo, receiver, vc, ip string, status int) {
+		smsLog := models.SmsLog{
+			AppInfo:  appInfo,
+			Ip:       ip,
+			Receiver: receiver,
+			Info:     "验证码：" + vc,
+			Status:   status,
+		}
+		if err := smsLog.InsertLog(); err != nil {
+			logs.Error("smsLog.InsertLog err:", err)
+		}
+	}(c.Ctx.Input.Header("Qx-Api-App"), to, verifyCode, c.Ctx.Input.IP(), status)
 }
 
 func (c *CommonController) HealthCheck() {
-	c.Ctx.ResponseWriter.Write([]byte("1"))
+	if _, err := c.Ctx.ResponseWriter.Write([]byte("1")); err != nil {
+		logs.Error("HealthCheck write err:", err)
+	}
 }
 
 func (c *CommonController) SystemInfo() {

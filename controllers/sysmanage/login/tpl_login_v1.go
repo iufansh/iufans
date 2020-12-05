@@ -1,6 +1,6 @@
 package login
 
-var tplLogin_1 = `
+var tplLoginV1 = `
 <!DOCTYPE html>
 <html>
 <head>

@@ -2,18 +2,19 @@ package admin
 
 import (
 	"fmt"
-	"html/template"
+	"github.com/astaxie/beego/logs"
 	"github.com/iufansh/iufans/controllers/sysmanage"
 	. "github.com/iufansh/iufans/models"
 	. "github.com/iufansh/iufans/utils"
 	. "github.com/iufansh/iutils"
+	"html/template"
 	"strconv"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/validation"
-	"time"
 	"strings"
+	"time"
 )
 
 func validate(admin *Admin) (hasError bool, errMsg string) {
@@ -39,7 +40,7 @@ type AdminIndexController struct {
 	sysmanage.BaseController
 }
 
-func (c *AdminIndexController) NestPrepare()  {
+func (c *AdminIndexController) NestPrepare() {
 	c.EnableRender = false
 }
 
@@ -71,7 +72,7 @@ func (c *AdminIndexController) Get() {
 	if t, err := template.New("tplIndexAdmin.tpl").Funcs(map[string]interface{}{
 		"date": beego.Date,
 	}).Parse(tplIndex); err != nil {
-		beego.Error("template Parse err", err)
+		logs.Error("template Parse err", err)
 	} else {
 		t.Execute(c.Ctx.ResponseWriter, c.Data)
 	}
@@ -84,7 +85,7 @@ func (c *AdminIndexController) Delone() {
 	id, err := c.GetInt64("id")
 	if err != nil {
 		msg = "数据错误"
-		beego.Error("Delete Admin error", err)
+		logs.Error("Delete Admin error", err)
 		return
 	}
 	o := orm.NewOrm()
@@ -96,13 +97,13 @@ func (c *AdminIndexController) Delone() {
 	// 删除管理员角色关联
 	if _, err := o.QueryTable(new(AdminRole)).Filter("AdminId", id).Delete(); err != nil {
 		o.Rollback()
-		beego.Error("Delete admin error 1", err)
+		logs.Error("Delete admin error 1", err)
 		msg = "删除失败"
 		return
 	}
 	if _, err := o.Delete(&Admin{Id: id}); err != nil {
 		o.Rollback()
-		beego.Error("Delete admin error 2", err)
+		logs.Error("Delete admin error 2", err)
 		msg = "删除失败"
 	} else {
 		o.Commit()
@@ -118,13 +119,13 @@ func (c *AdminIndexController) LoginVerify() {
 	id, err := c.GetInt64("id")
 	if err != nil {
 		msg = "数据错误"
-		beego.Error("LoginVerify Admin error", err)
+		logs.Error("LoginVerify Admin error", err)
 		return
 	}
 	o := orm.NewOrm()
 	model := Admin{Id: id}
 	if err := o.Read(&model); err != nil {
-		beego.Error("Read admin error", err)
+		logs.Error("Read admin error", err)
 		msg = "操作失败，请刷新后重试"
 		return
 	}
@@ -136,7 +137,7 @@ func (c *AdminIndexController) LoginVerify() {
 	model.GaSecret = ""
 
 	if _, err := o.Update(&model, "LoginVerify", "GaSecret"); err != nil {
-		beego.Error("Update admin error", err)
+		logs.Error("Update admin error", err)
 		msg = "解除失败，请刷新后重试"
 	} else {
 		code = 1
@@ -151,13 +152,13 @@ func (c *AdminIndexController) Locked() {
 	id, err := c.GetInt64("id")
 	if err != nil {
 		msg = "数据错误"
-		beego.Error("Locked Admin error", err)
+		logs.Error("Locked Admin error", err)
 		return
 	}
 	o := orm.NewOrm()
 	model := Admin{Id: id}
 	if err := o.Read(&model); err != nil {
-		beego.Error("Read admin error", err)
+		logs.Error("Read admin error", err)
 		msg = "操作失败，请刷新后重试"
 		return
 	}
@@ -175,7 +176,7 @@ func (c *AdminIndexController) Locked() {
 	}
 
 	if _, err := o.Update(&model, "Locked", "LockedDate", "LoginFailureCount"); err != nil {
-		beego.Error("Update admin error", err)
+		logs.Error("Update admin error", err)
 		msg = "操作失败，请刷新后重试"
 	} else {
 		code = 1
@@ -190,7 +191,7 @@ type AdminAddController struct {
 	sysmanage.BaseController
 }
 
-func (c *AdminAddController) NestPrepare()  {
+func (c *AdminAddController) NestPrepare() {
 	c.EnableRender = false
 }
 
@@ -208,7 +209,7 @@ func (c *AdminAddController) Get() {
 	c.Data["urlAdminAddPost"] = c.URLFor("AdminAddController.Post")
 
 	if t, err := template.New("tplAddAdmin.tpl").Parse(tplAdd); err != nil {
-		beego.Error("template Parse err", err)
+		logs.Error("template Parse err", err)
 	} else {
 		t.Execute(c.Ctx.ResponseWriter, c.Data)
 	}
@@ -269,7 +270,7 @@ func (c *AdminAddController) Post() {
 	if created, _, err := o.ReadOrCreate(&admin, "Username"); err != nil {
 		o.Rollback()
 		msg = "添加失败"
-		beego.Error("Insert admin error 1", err)
+		logs.Error("Insert admin error 1", err)
 	} else if created {
 		adminRoles := make([]AdminRole, 0)
 		for _, v := range roles {
@@ -280,7 +281,7 @@ func (c *AdminAddController) Post() {
 		if _, err := o.InsertMulti(len(adminRoles), adminRoles); err != nil {
 			o.Rollback()
 			msg = "添加失败"
-			beego.Error("Insert admin error 3", err)
+			logs.Error("Insert admin error 3", err)
 			return
 		}
 		o.Commit()
@@ -298,7 +299,7 @@ type AdminEditController struct {
 	sysmanage.BaseController
 }
 
-func (c *AdminEditController) NestPrepare()  {
+func (c *AdminEditController) NestPrepare() {
 	c.EnableRender = false
 }
 
@@ -336,7 +337,7 @@ func (c *AdminEditController) Get() {
 	c.Data["urlAdminEditPost"] = c.URLFor("AdminEditController.Post")
 
 	if t, err := template.New("tplEditAdmin.tpl").Parse(tplEdit); err != nil {
-		beego.Error("template Parse err", err)
+		logs.Error("template Parse err", err)
 	} else {
 		t.Execute(c.Ctx.ResponseWriter, c.Data)
 	}
@@ -387,13 +388,13 @@ func (c *AdminEditController) Post() {
 	if _, err := o.Update(&admin, cols...); err != nil {
 		o.Rollback()
 		msg = "更新失败"
-		beego.Error("Update admin error 1", err)
+		logs.Error("Update admin error 1", err)
 	} else {
 		// 删除旧角色
 		if _, err := o.QueryTable(new(AdminRole)).Filter("AdminId", admin.Id).Delete(); err != nil {
 			o.Rollback()
 			msg = "更新失败"
-			beego.Error("Update admin error 2", err)
+			logs.Error("Update admin error 2", err)
 		}
 		// 重新插入角色
 		if len(roles) > 0 {
@@ -407,7 +408,7 @@ func (c *AdminEditController) Post() {
 			if _, err := o.InsertMulti(len(adminRoles), adminRoles); err != nil {
 				o.Rollback()
 				msg = "更新失败"
-				beego.Error("Update admin error 3", err)
+				logs.Error("Update admin error 3", err)
 			}
 		}
 		o.Commit()

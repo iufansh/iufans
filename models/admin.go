@@ -27,7 +27,7 @@ type Admin struct {
 	Salt              string                                        // 盐
 	Name              string                                        // 名称
 	Password          string                                        // 密码
-	Username          string    `orm:"unique"`                      // 用户名
+	Username          string    `orm:"unique;size(127)"`                      // 用户名
 	Mobile            string    `orm:"null"`                        // 手机
 	LoginVerify       int8                                          // 验证状态(0:无验证;1:短信验证；2：谷歌安全码验证;)
 	GaSecret          string    `orm:"null"`                        // 谷歌验证秘钥

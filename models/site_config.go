@@ -14,7 +14,7 @@ type SiteConfig struct {
 	Creator    int64                                         // 创建人Id
 	Modifior   int64                                         // 更新人Id
 	Version    int                                           // 版本
-	Code       string    `orm:"unique"`                      // 代码
+	Code       string    `orm:"unique;size(63)"`                      // 代码
 	Value      string    `orm:"size(1024)"`                  // 值
 	IsSystem   int8                                          // 是否内置(内置不可删除)
 }

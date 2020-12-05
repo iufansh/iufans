@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/astaxie/beego"
 	"time"
 
 	"github.com/astaxie/beego/orm"
@@ -20,7 +21,7 @@ type Member struct {
 	AppNo             string
 	AppChannel        string
 	AppVersion        int
-	Username          string `orm:"unique"`
+	Username          string `orm:"unique;size(127)"`
 	ThirdAuthId       string // 三方登录的ID, 比如微信的unionid，华为的AuthHuaweiId
 	Name              string
 	Mobile            string
@@ -42,6 +43,16 @@ type Member struct {
 
 func init() {
 	orm.RegisterModelWithPrefix(SysDbPrefix, new(Member))
+}
+
+/**
+ * 获取格式化的手机号，格式：131*****234
+ */
+func (model *Member) GetFmtMobile() string {
+	if len(model.Mobile) != 11 {
+		return ""
+	}
+	return beego.Substr(model.Mobile, 0, 3) + "*****" + beego.Substr(model.Username, 8, 3)
 }
 
 func (model *Member) Paginate(page int, limit int, orderBy int, id int64, param1 string) (list []Member, total int64) {

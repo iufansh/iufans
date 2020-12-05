@@ -91,7 +91,7 @@ func (c *LoginApiController) Post() {
 	c.Dta = map[string]interface{}{
 		"id":         member.Id,
 		"token":      token,
-		"phone":      "", // 敏感信息尽量不在网络传输
+		"phone":      member.GetFmtMobile(),
 		"nickname":   member.Name,
 		"autoLogin":  true,
 		"avatar":     member.Avatar,

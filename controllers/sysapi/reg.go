@@ -93,6 +93,7 @@ func (c *RegApiController) Post() {
 	c.Dta = map[string]interface{}{
 		"id":         model.Id,
 		"token":      token,
+		"phone":      model.GetFmtMobile(),
 		"nickname":   model.Name,
 		"autoLogin":  true,
 		"avatar":     model.Avatar,
@@ -112,17 +113,19 @@ func CreateMemberReg(appNo, appChannel string, appVersion int, refId int64, user
 	//if avatar == "" {
 	//	model.Avatar = "/static/front/images/avatar/default.png"
 	//} else {
-	//	model.Avatar = avatar
+	model.Avatar = avatar
 	//}
 	if name == "" {
 		if len(model.Username) == 11 && strings.HasPrefix(model.Username, "1") {
-			model.Mobile = model.Username
 			model.Name = SubString(model.Username, 0, 3) + "*****" + SubString(model.Username, 8, 3)
 		} else {
 			model.Name = model.Username
 		}
 	} else {
 		model.Name = name
+	}
+	if len(model.Username) == 11 && strings.HasPrefix(model.Username, "1") {
+		model.Mobile = model.Username
 	}
 	salt := GetGuid()
 	model.Password = Md5(password, Pubsalt, salt)

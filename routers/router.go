@@ -15,6 +15,7 @@ import (
 	"github.com/iufansh/iufans/controllers/sysmanage/quicknav"
 	"github.com/iufansh/iufans/controllers/sysmanage/role"
 	"github.com/iufansh/iufans/controllers/sysmanage/siteconfig"
+	"github.com/iufansh/iufans/controllers/sysmanage/smslog"
 
 	"github.com/astaxie/beego"
 	"github.com/iufansh/iufans/controllers/sysapi"
@@ -119,6 +120,9 @@ func init() {
 	beego.Router(adminRouter+"/gift/delone", &gift.GiftIndexController{}, "post:Delone")
 	beego.Router(adminRouter+"/gift/add", &gift.GiftAddController{})
 
+	beego.Router(adminRouter+"/smslog/index", &smslog.SmsLogIndexController{})
+	beego.Router(adminRouter+"/smslog/del", &smslog.SmsLogIndexController{}, "post:Del")
+
 	// 前端
 	var frontRouter = beego.AppConfig.String("frontrouter")
 	beego.Router(frontRouter+"/uploadb", &sysfront.CommonFrontController{}, "post:Upload")
@@ -132,6 +136,7 @@ func init() {
 	var apiRouter = beego.AppConfig.String("apirouter")
 	beego.Router(apiRouter+"/login", &sysapi.LoginApiController{})
 	beego.Router(apiRouter+"/loginwx", &sysapi.LoginWxApiController{})
+	beego.Router(apiRouter+"/loginqq", &sysapi.LoginQqApiController{})
 	beego.Router(apiRouter+"/loginalipay", &sysapi.LoginAlipayApiController{})
 	beego.Router(apiRouter+"/logout", &sysapi.LoginApiController{}, "get:Logout")
 	beego.Router(apiRouter+"/bindphone", &sysapi.MemberApiController{}, "post:BindPhone")

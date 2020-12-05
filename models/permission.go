@@ -18,7 +18,7 @@ type Permission struct {
 	Display     int8                                          // 是否在菜单显示
 	Description string    `orm:"null"`                        // 描述
 	Url         string                                        // 链接地址
-	Name        string    `orm:"unique"`                      // 名称
+	Name        string    `orm:"unique;size(127)"`                      // 名称
 	Icon        string    `orm:"null"`                        // 图标
 	Sort        int                                           // 排序
 }

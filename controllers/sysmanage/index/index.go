@@ -1,13 +1,15 @@
 package index
 
 import (
-	"github.com/iufansh/iufans/controllers/sysmanage"
-	"github.com/iufansh/iuplugins/googleauth"
-	"time"
-	"github.com/astaxie/beego/orm"
-	. "github.com/iufansh/iufans/models"
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/orm"
+	"github.com/iufansh/iufans/controllers/sysmanage"
+	. "github.com/iufansh/iufans/models"
+	"github.com/iufansh/iuplugins/googleauth"
 	"html/template"
+	"net/http"
+	"time"
 )
 
 type SysIndexController struct {
@@ -21,14 +23,23 @@ func (c *SysIndexController) NestPrepare()  {
 func (c *SysIndexController) Get() {
 	o := orm.NewOrm()
 	var admin = Admin{Id: c.LoginAdminId}
-	o.Read(&admin)
+	if err := o.Read(&admin); err != nil {
+		logs.Error("SysIndexController.Get read admin err:", err)
+	}
+
+	forceGaAuth := beego.AppConfig.DefaultInt("forcegaauth", 0)
+	if forceGaAuth == 1 && admin.LoginVerify == 0 {
+		c.Redirect(c.URLFor("SysIndexController.GetAuth"), http.StatusFound)
+		return
+	}
+
 	c.Data["loginVerify"] = admin.LoginVerify
 
 	c.Data["urlIndexGetAuth"] = c.URLFor("SysIndexController.GetAuth")
 	c.Data["urlBackIndexGet"] = c.URLFor("BackIndexController.Get")
 
 	if t, err := template.New("tplSysIndex.tpl").Parse(tplIndex); err != nil {
-		beego.Error("template Parse err", err)
+		logs.Error("template Parse err", err)
 	} else {
 		t.Execute(c.Ctx.ResponseWriter, c.Data)
 	}
@@ -43,7 +54,7 @@ func (c *SysIndexController) GetAuth() {
 		"Modifior":   c.LoginAdminId,
 		"ModifyDate": time.Now(),
 	}); err != nil || num != 1 {
-		beego.Error("SysIndexController GetAuth", err, num)
+		logs.Error("SysIndexController GetAuth", err, num)
 		ok = false
 	}
 	c.Data["ok"] = ok
@@ -51,7 +62,7 @@ func (c *SysIndexController) GetAuth() {
 	c.Data["urlSysIndexPostAuth"] = c.URLFor("SysIndexController.PostAuth")
 
 	if t, err := template.New("tplGaAuth.tpl").Parse(sysmanage.TplGaAuth); err != nil {
-		beego.Error("template Parse err", err)
+		logs.Error("template Parse err", err)
 	} else {
 		t.Execute(c.Ctx.ResponseWriter, c.Data)
 	}
@@ -71,7 +82,7 @@ func (c *SysIndexController) PostAuth() {
 	}
 
 	if ok, err := googleauth.VerifyGAuth(admin.GaSecret, authCode); err != nil || !ok {
-		beego.Error("SysIndexController PostAuth", err, ok)
+		logs.Error("SysIndexController PostAuth", err, ok)
 		msg = "安全码验证失败，请确认"
 		return
 	}
@@ -80,7 +91,7 @@ func (c *SysIndexController) PostAuth() {
 		"Modifior":    c.LoginAdminId,
 		"ModifyDate":  time.Now(),
 	}); err != nil || num != 1 {
-		beego.Error("SysIndexController PostAuth", err, num)
+		logs.Error("SysIndexController PostAuth", err, num)
 		msg = "绑定失败，请重试"
 		return
 	}

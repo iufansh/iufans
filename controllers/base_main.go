@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 	"github.com/iufansh/iufans/utils"
 	"net/http"
 	"strings"
@@ -11,9 +12,20 @@ import (
 
 type BaseMainController struct {
 	beego.Controller
+	// 返回json时用，最后必须调用方法RetJSON或RetJSONOrigin
 	Code int
+	// 返回Tpl时用，最后必须调用方法
+	// 返回json时用，最后必须调用方法RetJSON或RetJSONOrigin
 	Msg  string
+	// 返回json时用，最后必须调用方法RetJSON或RetJSONOrigin
 	Dta  interface{} // 本来叫Data,但是和beego.Controller的冲突，所以改为Dta
+}
+
+func (c *BaseMainController) RetTpl(tplName string) {
+	c.Data["code"] = c.Code
+	c.Data["msg"] = c.Msg
+	c.Data["data"] = c.Dta
+	c.TplName = tplName
 }
 
 func (c *BaseMainController) RetJSON() {
@@ -39,7 +51,7 @@ func (c *BaseMainController) RetJSON() {
 	}
 	b, _ := json.Marshal(ret)
 
-	beego.Info("\r\n----------response---------",
+	logs.Info("\r\n----------response---------",
 		//"\r\n", iutils.SubString(string(b), 0, 300),
 		"\r\n", string(b),
 		"\r\n-------------------------",)

@@ -181,6 +181,9 @@ func initDbData() error {
 		{Id: 220, Pid: 200, Enabled: 1, Display: 1, Description: "礼包列表", Url: "GiftIndexController.Get", Name: "礼包列表", Icon: "", Sort: 100},
 		{Id: 221, Pid: 220, Enabled: 1, Display: 0, Description: "添加礼包", Url: "GiftAddController.Get", Name: "添加礼包", Icon: "", Sort: 100},
 		{Id: 222, Pid: 220, Enabled: 1, Display: 0, Description: "删除礼包", Url: "GiftIndexController.Delone", Name: "删除礼包", Icon: "", Sort: 100},
+		// 短信发送记录
+		{Id: 230, Pid: 200, Enabled: 1, Display: 1, Description: "短信发送列表", Url: "SmsLogIndexController.Get", Name: "短信发送列表", Icon: "", Sort: 100},
+		{Id: 231, Pid: 230, Enabled: 1, Display: 0, Description: "按条件删除短信", Url: "SmsLogIndexController.Del", Name: "按条件删除短信", Icon: "", Sort: 100},
 
 		/* 会员管理 */
 		{Id: 300, Pid: 0, Enabled: 1, Display: 1, Description: "会员管理", Url: "", Name: "会员管理", Icon: "#xe770;", Sort: 100},
@@ -281,6 +284,9 @@ func initDbData() error {
 		{Id: 320, RoleId: 2, PermissionId: 220},
 		{Id: 321, RoleId: 2, PermissionId: 221},
 		{Id: 322, RoleId: 2, PermissionId: 222},
+
+		{Id: 330, RoleId: 2, PermissionId: 230},
+		{Id: 331, RoleId: 2, PermissionId: 231},
 		*/
 		/* 会员管理 */
 		{Id: 400, RoleId: 2, PermissionId: 300},
