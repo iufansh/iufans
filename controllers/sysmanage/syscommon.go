@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -45,7 +46,8 @@ func (c *SyscommonController) Upload() {
 	}
 
 	fName := utils.DeleteAllSpace(h.Filename) // 去除所有空格
-	suffix := utils.SubString(fName, len(fName), strings.LastIndex(fName, ".")-len(fName))
+	suffix := path.Ext(fName)
+	// suffix := utils.SubString(fName, len(fName), strings.LastIndex(fName, ".")-len(fName))
 	var saveName string
 	if nameMode == "0" { // 随机名称
 		saveName = utils.Md5(utils.GetGuid(), strconv.FormatInt(time.Now().UnixNano(), 16)) + suffix
