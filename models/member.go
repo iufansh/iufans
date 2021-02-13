@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/astaxie/beego"
+	"strings"
 	"time"
 
 	"github.com/astaxie/beego/orm"
@@ -23,12 +24,14 @@ type Member struct {
 	AppVersion        int
 	Username          string `orm:"unique;size(127)"`
 	ThirdAuthId       string // 三方登录的ID, 比如微信的unionid，华为的AuthHuaweiId
+	RegType           int    // 注册类型 1-手机号；2-微信；3-支付宝；4-QQ；5-本机号码一键登录
 	Name              string
 	Mobile            string
 	Password          string
 	Salt              string
 	Vip               int
 	VipTime           time.Time `orm:"null"` // 最近VIP获得时间
+	VipExpire         time.Time `orm:"null"` // VIP过期时间
 	Avatar            string
 	Locked            int8
 	LockedDate        time.Time `orm:"null"`
@@ -55,7 +58,23 @@ func (model *Member) GetFmtMobile() string {
 	return beego.Substr(model.Mobile, 0, 3) + "*****" + beego.Substr(model.Username, 8, 3)
 }
 
-func (model *Member) Paginate(page int, limit int, orderBy int, id int64, param1 string) (list []Member, total int64) {
+/*
+ * 获取完整的头像地址
+ */
+func (model *Member) GetFullAvatar(domain string) string {
+	if model.Avatar == "" {
+		return ""
+	}
+	if strings.HasPrefix(strings.ToLower(model.Avatar), "http") {
+		return model.Avatar
+	}
+	if strings.HasPrefix(model.Avatar, "/") {
+		return domain + model.Avatar
+	}
+	return domain + "/" + model.Avatar
+}
+
+func (model *Member) Paginate(page int, limit int, orderBy int, id int64, param1 string, regType int) (list []Member, total int64) {
 	if page < 1 {
 		page = 1
 	}
@@ -65,6 +84,9 @@ func (model *Member) Paginate(page int, limit int, orderBy int, id int64, param1
 	cond := orm.NewCondition()
 	if param1 != "" {
 		cond = cond.AndCond(cond.And("Name__contains", param1).Or("Username__contains", param1).Or("Mobile__contains", param1))
+	}
+	if regType != 0 {
+		cond = cond.And("RegType", regType)
 	}
 	if id != -1 {
 		cond1 := orm.NewCondition()

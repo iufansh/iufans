@@ -17,9 +17,9 @@ type AppVersionApiController struct {
 
 /*
 api app版本比对
-param: app=a&os=android&ver=1
+param: os=android&ver=1
 body:
-return:{"code":1,"msg":"成功","data":{"no":1,"name":"v1.0","desc":"1.版本描述","url":"http://baidu.com","force":1}}
+return:{"code":1,"msg":"成功","data":{"ver":1,"name":"v1.0","desc":"1.版本描述","url":"http://baidu.com","force":1}}
 desc:
 */
 func (c *AppVersionApiController) Get() {
@@ -30,14 +30,13 @@ func (c *AppVersionApiController) Get() {
 		return
 	}
 	osType := c.GetString("os")
-	appNo := c.GetString("app")
+	appNo := c.AppNo
 	if appNo == "" {
-		c.Msg = "App编号为空"
-		return
+		appNo = c.GetString("app")
 	}
 	o := orm.NewOrm()
 	qs := o.QueryTable(new(AppVersion))
-	qs = qs.Filter("AppNo", appNo+"-others")
+	qs = qs.Filter("AppNo", appNo)
 	qs = qs.Filter("OsType", osType)
 	qs = qs.Filter("VersionNo__gt", currentVersion)
 	qs = qs.Filter("PublishTime__lt", time.Now())
@@ -56,7 +55,7 @@ func (c *AppVersionApiController) Get() {
 	c.Code = utils2.CODE_OK
 	c.Msg = "检查到新版本：" + appVersion.VersionName
 	c.Dta = map[string]interface{}{
-		"no":    appVersion.VersionNo,
+		"ver":   appVersion.VersionNo,
 		"name":  appVersion.VersionName,
 		"desc":  appVersion.VersionDesc,
 		"url":   appVersion.DownloadUrl,

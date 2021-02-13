@@ -2,18 +2,22 @@ package utils
 
 // 站点配置code
 const (
-	Scname              = "NAME"
-	Sccompanyname       = "COMPANY_NAME"
-	Sccompanyaddress    = "COMPANY_ADDRESS"
-	Sccompanyconcattel  = "COMPANY_CONCAT_TEL"
-	Sccompanyconcatqq   = "COMPANY_CONCAT_QQ"
-	Scsmssignname       = "sms_signname"
-	Scsmsapi            = "sms_api"
-	Scsmsuid            = "sms_uid"
-	Scsmskey            = "sms_key"
-	Scfrontregsmsverify = "front_reg_sms_verify"
-	ScBaiduApiKey       = "baidu_api_key"
-	ScBaiduSecretKey    = "baidu_secret_key"
+	Scname                  = "NAME"
+	Sccompanyname           = "COMPANY_NAME"
+	Sccompanyaddress        = "COMPANY_ADDRESS"
+	Sccompanyconcattel      = "COMPANY_CONCAT_TEL"
+	Sccompanyconcatqq       = "COMPANY_CONCAT_QQ"
+	Sccompanyconcatwx       = "COMPANY_CONCAT_WX"
+	Scsmssignname           = "sms_signname"
+	Scsmsapi                = "sms_api"
+	Scsmsuid                = "sms_uid"
+	Scsmskey                = "sms_key"
+	Scfrontregsmsverify     = "front_reg_sms_verify"
+	ScBaiduApiKey           = "baidu_api_key"
+	ScBaiduSecretKey        = "baidu_secret_key"
+	ScAliyunAccessKeyId     = "aliyun_access_key_id"
+	ScAliyunAccessKeySecret = "aliyun_access_key_secret"
+	ScAliyunAuthSecret      = "aliyun_auth_secret_" // 阿里云认证服务的秘钥，每个App不同，添加后缀 App编号，如：aliyun_auth_secret_s
 )
 
 var SiteConfigCodeMap = map[string]string{
@@ -34,4 +38,8 @@ const (
 const (
 	PayTypeAlipay    = "alipay"
 	PayTypeWechatPay = "wechatpay"
+)
+
+const (
+	AppChannelWxa = "wxa" // 微信小程序
 )

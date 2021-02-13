@@ -66,7 +66,7 @@ func (c *BaseController) GetPaginateParam() (limit, page int, offset int64) {
 	if v, err := c.GetInt64("limit"); err == nil && v > 0 {
 		limit = int(v)
 	} else {
-		limit = 10
+		limit = 20
 	}
 	if v, err := c.GetInt64("p"); err == nil && v > 0 {
 		page = int(v)

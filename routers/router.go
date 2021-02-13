@@ -4,9 +4,11 @@ import (
 	"github.com/iufansh/iufans/controllers"
 	"github.com/iufansh/iufans/controllers/sysmanage"
 	"github.com/iufansh/iufans/controllers/sysmanage/admin"
+	"github.com/iufansh/iufans/controllers/sysmanage/appbanner"
 	"github.com/iufansh/iufans/controllers/sysmanage/gift"
 	"github.com/iufansh/iufans/controllers/sysmanage/index"
 	"github.com/iufansh/iufans/controllers/sysmanage/information"
+	"github.com/iufansh/iufans/controllers/sysmanage/memberlogincount"
 	"github.com/iufansh/iufans/controllers/sysmanage/normalquestion"
 	"github.com/iufansh/iufans/controllers/sysmanage/iplist"
 	"github.com/iufansh/iufans/controllers/sysmanage/login"
@@ -32,7 +34,7 @@ func init() {
 	beego.Router("/i/privacy", &sysfront.PrivacyFrontController{})
 	beego.Router("/i/protocol", &sysfront.ProtocolFrontController{})
 
-	beego.Router("/sendsmscode", &controllers.CommonController{}, "get:SendSmsCode")
+	beego.Router("/sendsmscode", &controllers.CommonController{}, "get:SendSmsCode") // 通用的短信发送
 	beego.Router("/healthcheck", &controllers.CommonController{}, "get:HealthCheck")
 	beego.Router("/serversysteminfo", &controllers.CommonController{}, "get:SystemInfo")
 	var adminRouter = beego.AppConfig.String("adminrouter")
@@ -110,11 +112,18 @@ func init() {
 	beego.Router(adminRouter+"/membersuggest/index", &membersuggest.MemberSuggestIndexController{})
 	beego.Router(adminRouter+"/membersuggest/status", &membersuggest.MemberSuggestIndexController{}, "post:Status")
 
+	beego.Router(adminRouter+"/memberlogincount/index", &memberlogincount.MemberLoginCountIndexController{})
+
 	/* 应用管理 */
 	beego.Router(adminRouter+"/appversion/index", &appversion.AppVersionIndexController{})
 	beego.Router(adminRouter+"/appversion/delone", &appversion.AppVersionIndexController{}, "post:Delone")
 	beego.Router(adminRouter+"/appversion/add", &appversion.AppVersionAddController{})
 	beego.Router(adminRouter+"/appversion/edit", &appversion.AppVersionEditController{})
+
+	beego.Router(adminRouter+"/appbanner/index", &appbanner.AppBannerIndexController{})
+	beego.Router(adminRouter+"/appbanner/delone", &appbanner.AppBannerIndexController{}, "post:Delone")
+	beego.Router(adminRouter+"/appbanner/add", &appbanner.AppBannerAddController{})
+	beego.Router(adminRouter+"/appbanner/edit", &appbanner.AppBannerEditController{})
 
 	beego.Router(adminRouter+"/gift/index", &gift.GiftIndexController{})
 	beego.Router(adminRouter+"/gift/delone", &gift.GiftIndexController{}, "post:Delone")
@@ -134,11 +143,14 @@ func init() {
 
 	// api
 	var apiRouter = beego.AppConfig.String("apirouter")
+	beego.Router(apiRouter+"/send/sms", &sysapi.SendSmsApiController{})
+	beego.Router(apiRouter+"/loginaliauth", &sysapi.LoginAliyunAuthApiController{})
 	beego.Router(apiRouter+"/login", &sysapi.LoginApiController{})
 	beego.Router(apiRouter+"/loginwx", &sysapi.LoginWxApiController{})
+	beego.Router(apiRouter+"/loginwxa/userinfo", &sysapi.LoginWxApiController{}, "post:PostUserInfo")
 	beego.Router(apiRouter+"/loginqq", &sysapi.LoginQqApiController{})
 	beego.Router(apiRouter+"/loginalipay", &sysapi.LoginAlipayApiController{})
-	beego.Router(apiRouter+"/logout", &sysapi.LoginApiController{}, "get:Logout")
+	beego.Router(apiRouter+"/logout", &sysapi.LoginApiController{}, "*:Logout")
 	beego.Router(apiRouter+"/bindphone", &sysapi.MemberApiController{}, "post:BindPhone")
 	beego.Router(apiRouter+"/cancelaccount", &sysapi.MemberApiController{}, "post:CancelAccount")
 	beego.Router(apiRouter+"/refreshlogin", &sysapi.RefreshLoginApiController{})
@@ -149,8 +161,10 @@ func init() {
 	beego.Router(apiRouter+"/suggest/unread", &sysapi.MemberSuggestApiController{}, "get:GetNewFeedback")
 	beego.Router(apiRouter+"/checkupdate", &sysapi.AppVersionApiController{})
 	beego.Router(apiRouter+"/info", &sysapi.InformationApiController{})
+	beego.Router(apiRouter+"/banners", &sysapi.AppBannerApiController{})
 	beego.Router(apiRouter+"/normalqa", &sysapi.NormalQuestionApiController{})
 	beego.Router(apiRouter+"/sysconf", &sysapi.SysConfigApiController{})
 	beego.Router(apiRouter+"/member/modifyname", &sysapi.MemberApiController{}, "post:ModifyName")
 	beego.Router(apiRouter+"/member/uploadavatar", &sysapi.MemberApiController{}, "post:UploadAvatar")
+	beego.Router(apiRouter+"/member/vip", &sysapi.MemberApiController{}, "get:GetVip")
 }

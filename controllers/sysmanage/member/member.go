@@ -2,6 +2,7 @@ package member
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"github.com/iufansh/iufans/controllers/sysmanage"
 	. "github.com/iufansh/iufans/models"
 	. "github.com/iufansh/iufans/utils"
@@ -45,18 +46,19 @@ func (c *MemberIndexController) Get() {
 	param1 := strings.TrimSpace(c.GetString("param1"))
 	id, _ := c.GetInt64("id", -1)
 	orderBy, _ := c.GetInt("orderBy", 0)
+	regType, _ := c.GetInt("regType", 0)
 
 	page, err := c.GetInt("p")
 	if err != nil {
 		page = 1
 	}
 	limit, _ := beego.AppConfig.Int("pagelimit")
-	list, total := new(Member).Paginate(page, limit, orderBy, id, param1)
+	list, total := new(Member).Paginate(page, limit, orderBy, id, param1, regType)
 	c.SetPaginator(limit, total)
 	// 返回值
 	c.Data["dataList"] = &list
 	// 查询条件
-	c.Data["condArr"] = map[string]interface{}{"param1": param1, "id": id, "orderBy": orderBy}
+	c.Data["condArr"] = map[string]interface{}{"param1": param1, "id": id, "orderBy": orderBy, "regType": regType}
 
 	c.Data["urlMemberIndexGet"] = c.URLFor("MemberIndexController.Get")
 	c.Data["urlMemberLocked"] = c.URLFor("MemberIndexController.Locked")
@@ -65,7 +67,7 @@ func (c *MemberIndexController) Get() {
 	if t, err := template.New("tplIndexMember.tpl").Funcs(map[string]interface{}{
 		"date": beego.Date,
 	}).Parse(tplIndex); err != nil {
-		beego.Error("template Parse err", err)
+		logs.Error("template Parse err", err)
 	} else {
 		t.Execute(c.Ctx.ResponseWriter, c.Data)
 	}
@@ -78,12 +80,12 @@ func (c *MemberIndexController) Delone() {
 	id, err := c.GetInt64("id")
 	if err != nil {
 		msg = "数据错误"
-		beego.Error("Delete Member error", err)
+		logs.Error("Delete Member error", err)
 		return
 	}
 	o := orm.NewOrm()
 	if _, err := o.Delete(&Member{Id: id}); err != nil {
-		beego.Error("Delete member error 2", err)
+		logs.Error("Delete member error 2", err)
 		msg = "删除失败"
 	} else {
 		code = 1
@@ -98,13 +100,13 @@ func (c *MemberIndexController) Locked() {
 	id, err := c.GetInt64("id")
 	if err != nil {
 		msg = "数据错误"
-		beego.Error("Locked Member error", err)
+		logs.Error("Locked Member error", err)
 		return
 	}
 	o := orm.NewOrm()
 	model := Member{Id: id}
 	if err := o.Read(&model); err != nil {
-		beego.Error("Read member error", err)
+		logs.Error("Read member error", err)
 		msg = "操作失败，请刷新后重试"
 		return
 	}
@@ -118,7 +120,7 @@ func (c *MemberIndexController) Locked() {
 	}
 
 	if _, err := o.Update(&model, "Locked", "LockedDate", "LoginFailureCount"); err != nil {
-		beego.Error("Update member error", err)
+		logs.Error("Update member error", err)
 		msg = "操作失败，请刷新后重试"
 	} else {
 		code = 1
@@ -153,8 +155,10 @@ func (c *MemberEditController) Get() {
 	c.Data["urlMemberIndexGet"] = c.URLFor("MemberIndexController.Get")
 	c.Data["urlMemberEditPost"] = c.URLFor("MemberEditController.Post")
 
-	if t, err := template.New("tplEditMember.tpl").Parse(tplEdit); err != nil {
-		beego.Error("template Parse err", err)
+	if t, err := template.New("tplEditMember.tpl").Funcs(map[string]interface{}{
+		"date": beego.Date,
+	}).Parse(tplEdit); err != nil {
+		logs.Error("template Parse err", err)
 	} else {
 		t.Execute(c.Ctx.ResponseWriter, c.Data)
 	}
@@ -178,7 +182,7 @@ func (c *MemberEditController) Post() {
 	}
 	o := orm.NewOrm()
 
-	cols := []string{"Username", "Name", "Vip", "Enabled", "ModifyDate"}
+	cols := []string{"Username", "Name", "Vip", "VipExpire", "Enabled", "ModifyDate"}
 	isChangePwd := false
 	if member.Password != "" {
 		salt := GetGuid()
@@ -198,7 +202,7 @@ func (c *MemberEditController) Post() {
 	member.Modifior = c.LoginAdminId
 	if _, err := o.Update(&member, cols...); err != nil {
 		msg = "更新失败"
-		beego.Error("Update member error 1", err)
+		logs.Error("Update member error 1", err)
 	} else {
 		// 如修改了密码，则重置登录，让用户必须重新登录
 		if isChangePwd {

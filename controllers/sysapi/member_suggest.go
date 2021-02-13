@@ -86,7 +86,10 @@ func (c *MemberSuggestApiController) Post() {
 	}
 	o := orm.NewOrm()
 	var member Member
-	o.QueryTable(new(Member)).Filter("Id", c.LoginMemberId).One(&member, "OrgId", "Name", "Mobile")
+	if err := o.QueryTable(new(Member)).Filter("Id", c.LoginMemberId).One(&member, "OrgId", "Name", "Mobile"); err != nil {
+		c.Msg = "提交失败，请重试"
+		return
+	}
 	ms := MemberSuggest{
 		AppInfo:  fmt.Sprintf("%s-%s-%d", c.AppNo, c.AppChannel, c.AppVersionCode),
 		OrgId:    member.OrgId,

@@ -2,6 +2,7 @@ package appversion
 
 import (
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
 	"github.com/iufansh/iufans/controllers/sysmanage"
 	. "github.com/iufansh/iufans/models"
@@ -40,7 +41,7 @@ func (c *AppVersionIndexController) Get() {
 	if t, err := template.New("tplAppVersionIndex.tpl").Funcs(map[string]interface{}{
 		"date": beego.Date,
 	}).Parse(tplIndex); err != nil {
-		beego.Error("template Parse err", err)
+		logs.Error("template Parse err", err)
 	} else {
 		t.Execute(c.Ctx.ResponseWriter, c.Data)
 	}
@@ -63,7 +64,7 @@ func (c *AppVersionIndexController) Delone() {
 	}
 	_, err1 := o.Delete(&model, "Id")
 	if err1 != nil {
-		beego.Error("Delete AppVersion eror", err1)
+		logs.Error("Delete AppVersion eror", err1)
 		msg = "删除失败"
 	} else {
 		code = 1
@@ -86,7 +87,7 @@ func (c *AppVersionAddController) Get() {
 	if t, err := template.New("tplAddAppVersion.tpl").Funcs(map[string]interface{}{
 		"urlfor": beego.URLFor,
 	}).Parse(tplAdd); err != nil {
-		beego.Error("template Parse err", err)
+		logs.Error("template Parse err", err)
 	} else {
 		t.Execute(c.Ctx.ResponseWriter, c.Data)
 	}
@@ -112,7 +113,7 @@ func (c *AppVersionAddController) Post() {
 	o := orm.NewOrm()
 	if _, err := o.Insert(&model); err != nil {
 		msg = "添加失败"
-		beego.Error("添加失败", err)
+		logs.Error("添加失败", err)
 	} else {
 		code = 1
 		msg = "添加成功"
@@ -152,7 +153,7 @@ func (c *AppVersionEditController) Get() {
 		"date":   beego.Date,
 		"urlfor": beego.URLFor,
 	}).Parse(tplEdit); err != nil {
-		beego.Error("template Parse err", err)
+		logs.Error("template Parse err", err)
 	} else {
 		t.Execute(c.Ctx.ResponseWriter, c.Data)
 	}
@@ -177,7 +178,7 @@ func (c *AppVersionEditController) Post() {
 	o := orm.NewOrm()
 	if _, err := o.Update(&model, cols...); err != nil {
 		msg = "更新失败"
-		beego.Error("更新失败", err)
+		logs.Error("更新失败", err)
 	} else {
 		code = 1
 		msg = "更新成功"

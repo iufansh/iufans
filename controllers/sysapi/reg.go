@@ -6,9 +6,9 @@ import (
 	"github.com/astaxie/beego/logs"
 	fm "github.com/iufansh/iufans/models"
 	. "github.com/iufansh/iutils"
+	"time"
 
 	"encoding/json"
-	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/validation"
 	. "github.com/iufansh/iufans/models"
@@ -79,31 +79,43 @@ func (c *RegApiController) Post() {
 	// 查询层级
 	var refId = utils.ReverseInviteCode(p.InviteCode)
 
-	model, err := CreateMemberReg(c.AppNo, c.AppChannel, c.AppVersionCode, refId, model.Username, model.Password, model.Name, "", "")
+	model, err := CreateMemberReg(1, c.AppNo, c.AppChannel, c.AppVersionCode, refId, model.Username, model.Password, model.Name, "", "")
 	if err != nil {
 		c.Msg = "注册失败，请重试"
 		return
 	}
 	// 自动登录
 	model.LoginIp = c.Ctx.Input.IP()
+	// 以下两个是用于统计登录次数
+	model.AppNo = c.AppNo
+	model.AppChannel = c.AppChannel
+	model.AppVersion = c.AppVersionCode
 	_, _, token := UpdateMemberLoginStatus(model)
 
 	c.Msg = "注册成功"
 	c.Code = utils.CODE_OK
+	var vipEffect int
+	if model.Vip > 0 && !model.VipExpire.IsZero() && model.VipExpire.After(time.Now().AddDate(0, 0, -1)) {
+		vipEffect = 1
+	}
 	c.Dta = map[string]interface{}{
 		"id":         model.Id,
 		"token":      token,
 		"phone":      model.GetFmtMobile(),
 		"nickname":   model.Name,
 		"autoLogin":  true,
-		"avatar":     model.Avatar,
+		"avatar":     model.GetFullAvatar(c.Ctx.Input.Site()),
 		"inviteCode": utils.GenInviteCode(model.Id),
+		"vipEffect":  vipEffect,
+		"vip":        model.Vip,
+		"vipExpire":  FormatDate(model.VipExpire),
 	}
 	// go GenerateRandAvatar(memberId)
 	return
 }
 
-func CreateMemberReg(appNo, appChannel string, appVersion int, refId int64, username string, password string, name string, thirdAuthId string, avatar string) (model Member, err error) {
+func CreateMemberReg(regType int, appNo, appChannel string, appVersion int, refId int64, username string, password string, name string, thirdAuthId string, avatar string) (model Member, err error) {
+	model.RegType = regType
 	model.AppNo = appNo
 	model.AppChannel = appChannel
 	model.AppVersion = appVersion
@@ -119,7 +131,7 @@ func CreateMemberReg(appNo, appChannel string, appVersion int, refId int64, user
 		if len(model.Username) == 11 && strings.HasPrefix(model.Username, "1") {
 			model.Name = SubString(model.Username, 0, 3) + "*****" + SubString(model.Username, 8, 3)
 		} else {
-			model.Name = model.Username
+			model.Name = fmt.Sprintf("会员%d", RandNum(1, 1000000))
 		}
 	} else {
 		model.Name = name
@@ -139,7 +151,7 @@ func CreateMemberReg(appNo, appChannel string, appVersion int, refId int64, user
 	var memberId int64
 	o := orm.NewOrm()
 	if memberId, err = o.Insert(&model); err != nil {
-		beego.Error("memberRegErr Member error", err)
+		logs.Error("memberRegErr Member error", err)
 		return model, err
 	}
 	model.Id = memberId

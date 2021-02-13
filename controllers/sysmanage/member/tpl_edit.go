@@ -39,6 +39,13 @@ var tplEdit = `
 									<input type="text" name="Vip" value="{{.data.Vip}}" required lay-verify="required" placeholder="请输入vip等级，必须为数字" class="layui-input">
 								</div>
 							</div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">VIP过期</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="VipExpire" value="{{if ne (date .data.VipExpire "Y-m-d") "0001-01-01"}}{{date .data.VipExpire "Y-m-d H:i:s"}}{{end}}" placeholder="请输入VIP过期时间"
+                                           class="layui-input">
+                                </div>
+                            </div>
 							<div class="layui-form-item">
 								<label class="layui-form-label">密码</label>
 								<div class="layui-input-block">
@@ -80,10 +87,16 @@ var tplEdit = `
 {{.Scripts}}
 <script src="{{.static_url}}/static/back/js/md5.min.js"></script>
 <script>
-    layui.use(['layer','form'], function(){
+    layui.use(['layer','form','laydate'], function(){
         var $ = layui.jquery,
                 layer = layui.layer,
                 form = layui.form;
+		var laydate = layui.laydate;
+
+        laydate.render({
+            elem: 'input[name="VipExpire"]',
+            type: 'datetime'
+        });
         form.on('submit(adminsave)', function (data) {
             if($("#Password").val()!="") {
                 $("#Password").val(md5($("#Password").val()));

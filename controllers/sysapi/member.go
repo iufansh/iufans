@@ -21,6 +21,35 @@ type MemberApiController struct {
 	BaseApiController
 }
 
+/*
+api 获取vip状态
+param:
+body:
+return:{"code":1,"msg":"成功","data":}
+desc:
+*/
+func (c *MemberApiController) GetVip() {
+	defer c.RetJSON()
+	o := orm.NewOrm()
+	var member Member
+	if err := o.QueryTable(new(Member)).Filter("Id", c.LoginMemberId).One(&member, "Vip", "VipExpire"); err != nil {
+		logs.Error("MemberApiController.getVip query Member err:", err)
+		c.Msg = "获取异常，请重试"
+		return
+	}
+	var vipEffect int
+	if member.Vip > 0 && !member.VipExpire.IsZero() && member.VipExpire.After(time.Now().AddDate(0, 0, -1)) {
+		vipEffect = 1
+	}
+	c.Dta = map[string]interface{}{
+		"vipEffect": vipEffect,
+		"vip":       member.Vip,
+		"vipExpire": FormatDate(member.VipExpire),
+	}
+	c.Code = utils.CODE_OK
+	c.Msg = "ok"
+}
+
 type bindParam struct {
 	AuthCode string `json:"authCode"`
 	Username string `json:"username"`
@@ -264,5 +293,5 @@ func (c *MemberApiController) UploadAvatar() {
 
 	c.Msg = "修改成功"
 	c.Code = utils.CODE_OK
-	c.Dta = member.Avatar
+	c.Dta = member.GetFullAvatar(c.Ctx.Input.Site())
 }

@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"github.com/astaxie/beego/orm"
 	"github.com/iufansh/iufans/models"
-	utils2 "github.com/iufansh/iufans/utils"
+	"github.com/iufansh/iufans/utils"
+	"github.com/iufansh/iutils"
+	"time"
 )
 
 type forgetPwdParam struct {
@@ -27,7 +29,7 @@ func (c *ForgetPwdApiController) Post() {
 	defer c.RetJSON()
 	var p forgetPwdParam
 	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &p); err != nil {
-		c.Code = utils2.CODE_ERROR
+		c.Code = utils.CODE_ERROR
 		c.Msg = "参数格式错误"
 		return
 	}
@@ -39,7 +41,7 @@ func (c *ForgetPwdApiController) Post() {
 		c.Msg = "验证码不能为空"
 		return
 	}
-	if ok := utils2.VerifySmsVerifyCode(p.Mobile, p.AuthCode); !ok {
+	if ok := utils.VerifySmsVerifyCode(p.Mobile, p.AuthCode); !ok {
 		c.Msg = "短信验证码错误"
 		return
 	}
@@ -56,15 +58,28 @@ func (c *ForgetPwdApiController) Post() {
 	}
 	// 自动登录
 	member.LoginIp = c.Ctx.Input.IP()
+	// 以下3个是用于统计登录次数
+	member.AppNo = c.AppNo
+	member.AppChannel = c.AppChannel
+	member.AppVersion = c.AppVersionCode
 	_, _, token := UpdateMemberLoginStatus(member)
 
-	c.Code = utils2.CODE_OK
+	c.Code = utils.CODE_OK
 	c.Msg = "验证成功"
+	var vipEffect int
+	if member.Vip > 0 && !member.VipExpire.IsZero() && member.VipExpire.After(time.Now().AddDate(0, 0, -1)) {
+		vipEffect = 1
+	}
 	c.Dta = map[string]interface{}{
-		"id":        member.Id,
-		"token":     token,
-		"phone":     "", // 敏感信息尽量不在网络传输
-		"nickname":  member.Name,
-		"autoLogin": true,
+		"id":         member.Id,
+		"token":      token,
+		"phone":      member.GetFmtMobile(),
+		"nickname":   member.Name,
+		"autoLogin":  true,
+		"avatar":     member.GetFullAvatar(c.Ctx.Input.Site()),
+		"inviteCode": utils.GenInviteCode(member.Id),
+		"vipEffect":  vipEffect,
+		"vip":        member.Vip,
+		"vipExpire":  iutils.FormatDate(member.VipExpire),
 	}
 }

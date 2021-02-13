@@ -1,7 +1,7 @@
 package sysapi
 
 import (
-	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
 	"github.com/iufansh/iufans/controllers"
 	. "github.com/iufansh/iufans/models"
@@ -31,7 +31,7 @@ type BaseApiController struct {
 
 func (c *BaseApiController) Prepare() {
 	c.EnableXSRF = false
-	beego.Info("\r\n----------request---------",
+	logs.Info("\r\n----------request---------",
 		"\r\nUri:", c.Ctx.Input.URI(),
 		"\r\nMethod:", c.Ctx.Input.Method(),
 		"\r\nFrom ip:", c.Ctx.Input.IP(),
@@ -115,7 +115,7 @@ func (c *BaseApiController) Prepare() {
 			c.RetJSON()
 			return
 		} else {
-			beego.Error("BaseApiController QueryTable Member err:", err)
+			logs.Error("BaseApiController QueryTable Member err:", err)
 			c.Msg = "异常，请重试"
 			c.RetJSON()
 			return
@@ -166,7 +166,7 @@ type Base2ApiController struct {
 
 func (c *Base2ApiController) Prepare() {
 	c.EnableXSRF = false
-	beego.Info("\r\n----------request---------",
+	logs.Info("\r\n----------request---------",
 		"\r\nUri:", c.Ctx.Input.URI(),
 		"\r\nMethod:", c.Ctx.Input.Method(),
 		"\r\nFrom ip:", c.Ctx.Input.IP(),
@@ -236,7 +236,7 @@ func Retjson(ctx *context.Context, msg *string, code *int, data ...interface{}) 
 		ret["data"] = data[0]
 	}
 	b, _ := json.Marshal(ret)
-	beego.Info("\r\n----------response---------",
+	logs.Info("\r\n----------response---------",
 		"\r\n", string(b),
 		"\r\n-------------------------",)
 	ctx.Output.JSON(ret, false, false)

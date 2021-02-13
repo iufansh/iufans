@@ -35,9 +35,9 @@ func (c *NormalQuestionApiController) Get() {
 		return
 	}
 	list := make([]map[string]interface{}, 0)
-	for _, v := range quetions {
+	for i, v := range quetions {
 		list = append(list, map[string]interface{}{
-			"seq":      v.Seq,
+			"seq":      i+1,
 			"question": v.Question,
 			"answer":   v.Answer,
 		})

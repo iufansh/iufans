@@ -33,7 +33,7 @@ var tplIndex = `
 								<tr>
 									<td>{{$vo.Id}}</td>
 									<td>{{or (index getSiteConfigCodeMap $vo.Code) $vo.Code}}</td>
-									<td>{{$vo.Value}}</td>
+									<td style="max-width: 600px; word-wrap: break-word;">{{$vo.Value}}</td>
 									<td>{{date $vo.ModifyDate "Y-m-d H:i:s"}}</td>
 									<td>
 										<a href='{{$.urlSiteConfigEditGet}}?id={{$vo.Id}}' class="layui-btn layui-btn-normal layui-btn-xs">编辑</a>

@@ -22,6 +22,7 @@ import (
 	"github.com/iufansh/iutils"
 	"hash"
 	"strings"
+	"time"
 )
 
 type loginAlipayParam struct {
@@ -138,10 +139,14 @@ func (c *LoginAlipayApiController) Post() {
 	}
 	o := orm.NewOrm()
 	var pc models.PaymentConfig
-	o.QueryTable(new(models.PaymentConfig)).Filter("AppNo", c.AppNo).Filter("PayType", utils.PayTypeAlipay).Limit(1).One(&pc)
+	if err := o.QueryTable(new(models.PaymentConfig)).Filter("AppNo", c.AppNo).Filter("PayType", utils.PayTypeAlipay).Limit(1).One(&pc); err != nil {
+		logs.Error("LoginAlipayApiController QueryTable PaymentConfig err:", err)
+		c.Msg = "登录异常(ALI01)"
+		return
+	}
 	var vo models.AlipayVo
 	if err := json.Unmarshal([]byte(pc.ConfValue), &vo); err != nil {
-		logs.Error("Unmarshal ConfValue err:", err)
+		logs.Error("LoginAlipayApiController Unmarshal ConfValue err:", err)
 		c.Msg = "接口异常(ALI11)"
 		return
 	}
@@ -149,21 +154,21 @@ func (c *LoginAlipayApiController) Post() {
 	rsp, err := alipay.SystemOauthToken(pc.AppId, alipay.PKCS1, vo.PriKey, "authorization_code", p.Code, "RSA2")
 	logs.Info("alipay.SystemOauthToken rsp=", fmt.Sprintf("%+v", rsp))
 	if err != nil {
-		logs.Error("alipay.SystemOauthToken err:", err)
+		logs.Error("LoginAlipayApiController alipay.SystemOauthToken err:", err)
 		c.Msg = "授权异常(ALI12)"
 		return
 	} else if rsp.ErrorResponse != nil && rsp.ErrorResponse.Code != "10000" {
-		logs.Error("alipay.SystemOauthToken err:", rsp.ErrorResponse)
+		logs.Error("LoginAlipayApiController alipay.SystemOauthToken err:", rsp.ErrorResponse)
 		c.Msg = "信息获取失败(ALI13)"
 		return
 	} else if rsp.Response == nil || rsp.Response.UserId == "" {
-		logs.Error("alipay.SystemOauthToken err:", rsp.ErrorResponse)
+		logs.Error("LoginAlipayApiController alipay.SystemOauthToken err:", rsp.ErrorResponse)
 		c.Msg = "信息获取失败(ALI14)"
 		return
 	}
 	var member models.Member
 	if err := o.QueryTable(new(models.Member)).Filter("ThirdAuthId", rsp.Response.UserId).Limit(1).One(&member); err != nil && err != orm.ErrNoRows {
-		logs.Error("QueryTable Member err:", err)
+		logs.Error("LoginAlipayApiController QueryTable Member err:", err)
 		c.Msg = "用户查询异常"
 		return
 	} else if err == orm.ErrNoRows {
@@ -174,13 +179,13 @@ func (c *LoginAlipayApiController) Post() {
 		client := alipay.NewClient(pc.AppId, vo.PriKey, isProd)
 		client.SetCharset("utf-8").SetSignType("RSA2").SetAuthToken(rsp.Response.AccessToken)
 		resp, err := client.UserInfoShare()
-		logs.Info("alipay.UserInfoShare rsp=", resp)
+		logs.Info("LoginAlipayApiController alipay.UserInfoShare rsp=", resp)
 		if err != nil {
-			logs.Error("alipay.UserInfoShare err:", err)
+			logs.Error("LoginAlipayApiController alipay.UserInfoShare err:", err)
 			c.Msg = "授权异常(ALI15)"
 			return
 		} else if resp.Response.Code != "10000" {
-			logs.Error("alipay.UserInfoShare err:", resp.Response)
+			logs.Error("LoginAlipayApiController alipay.UserInfoShare err:", resp.Response)
 			c.Msg = "信息获取失败(ALI16)"
 			return
 		}
@@ -190,25 +195,35 @@ func (c *LoginAlipayApiController) Post() {
 		} else {
 			nickName = resp.Response.NickName
 		}
-		if member, err = CreateMemberReg(c.AppNo, c.AppChannel, c.AppVersionCode, 0, resp.Response.UserId, resp.Response.UserId, nickName, resp.Response.UserId, resp.Response.Avatar); err != nil {
+		if member, err = CreateMemberReg(3, c.AppNo, c.AppChannel, c.AppVersionCode, 0, resp.Response.UserId, resp.Response.UserId, nickName, resp.Response.UserId, resp.Response.Avatar); err != nil {
 			c.Msg = "登录失败，请重试"
 			return
 		}
 	}
 	// 自动登录
 	member.LoginIp = c.Ctx.Input.IP()
+	// 以下两个是用于统计登录次数
+	member.AppNo = c.AppNo
+	member.AppChannel = c.AppChannel
+	member.AppVersion = c.AppVersionCode
 	_, _, token := UpdateMemberLoginStatus(member)
 
 	c.Code = utils.CODE_OK
 	c.Msg = "登录成功"
+	var vipEffect int
+	if member.Vip > 0 && !member.VipExpire.IsZero() && member.VipExpire.After(time.Now().AddDate(0, 0, -1)) {
+		vipEffect = 1
+	}
 	c.Dta = map[string]interface{}{
 		"id":         member.Id,
 		"token":      token,
 		"phone":      member.GetFmtMobile(),
 		"nickname":   member.Name,
 		"autoLogin":  true,
-		"avatar":     member.Avatar,
+		"avatar":     member.GetFullAvatar(c.Ctx.Input.Site()),
 		"inviteCode": utils.GenInviteCode(member.Id),
-		// "accessToken": rsp.Response.AccessToken, // access token
+		"vipEffect":  vipEffect,
+		"vip":        member.Vip,
+		"vipExpire":  iutils.FormatDate(member.VipExpire),
 	}
 }

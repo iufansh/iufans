@@ -8,6 +8,8 @@ import (
 	"github.com/astaxie/beego/orm"
 	"github.com/iufansh/iufans/models"
 	"github.com/iufansh/iufans/utils"
+	"github.com/iufansh/iutils"
+	"time"
 )
 
 type loginQqParam struct {
@@ -70,7 +72,7 @@ func (c *LoginQqApiController) Post() {
 		c.Msg = "用户查询异常"
 		return
 	} else if err == orm.ErrNoRows {
-		if member, err = CreateMemberReg(c.AppNo, c.AppChannel, c.AppVersionCode, 0, unionInfo.Unionid, unionInfo.Unionid, p.Nickname, unionInfo.Unionid, p.Avatar); err != nil {
+		if member, err = CreateMemberReg(4, c.AppNo, c.AppChannel, c.AppVersionCode, 0, unionInfo.Unionid, unionInfo.Unionid, p.Nickname, unionInfo.Unionid, p.Avatar); err != nil {
 			c.Msg = "登录失败，请重试"
 			return
 		}
@@ -78,18 +80,28 @@ func (c *LoginQqApiController) Post() {
 
 	// 自动登录
 	member.LoginIp = c.Ctx.Input.IP()
+	// 以下两个是用于统计登录次数
+	member.AppNo = c.AppNo
+	member.AppChannel = c.AppChannel
+	member.AppVersion = c.AppVersionCode
 	_, _, token := UpdateMemberLoginStatus(member)
 
 	c.Code = utils.CODE_OK
 	c.Msg = "登录成功"
+	var vipEffect int
+	if member.Vip > 0 && !member.VipExpire.IsZero() && member.VipExpire.After(time.Now().AddDate(0, 0, -1)) {
+		vipEffect = 1
+	}
 	c.Dta = map[string]interface{}{
 		"id":         member.Id,
 		"token":      token,
 		"phone":      member.GetFmtMobile(),
 		"nickname":   member.Name,
 		"autoLogin":  true,
-		"avatar":     member.Avatar,
+		"avatar":     member.GetFullAvatar(c.Ctx.Input.Site()),
 		"inviteCode": utils.GenInviteCode(member.Id),
-		// "accessToken": accessToken.AccessToken, // 微信access token
+		"vipEffect":  vipEffect,
+		"vip":        member.Vip,
+		"vipExpire":  iutils.FormatDate(member.VipExpire),
 	}
 }

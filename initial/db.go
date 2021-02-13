@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	utils "github.com/iufansh/iutils"
+	"time"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
 	. "github.com/iufansh/iufans/models"
 	_ "github.com/mattn/go-sqlite3"
-	"time"
 )
 
 func InitSql() {
@@ -41,7 +41,7 @@ func InitSql() {
 			logs.Error("orm.RegisterDriver sqlite3 err:", err)
 			return
 		}
-		orm.DefaultTimeLoc = time.Local
+		orm.DefaultTimeLoc = time.UTC
 		dataSource = "./data.db"
 	} else {
 		panic("未知数据库驱动类型")
@@ -184,6 +184,11 @@ func initDbData() error {
 		// 短信发送记录
 		{Id: 230, Pid: 200, Enabled: 1, Display: 1, Description: "短信发送列表", Url: "SmsLogIndexController.Get", Name: "短信发送列表", Icon: "", Sort: 100},
 		{Id: 231, Pid: 230, Enabled: 1, Display: 0, Description: "按条件删除短信", Url: "SmsLogIndexController.Del", Name: "按条件删除短信", Icon: "", Sort: 100},
+		// App轮播管理
+		{Id: 240, Pid: 200, Enabled: 1, Display: 1, Description: "App轮播列表", Url: "AppBannerIndexController.Get", Name: "App轮播列表", Icon: "", Sort: 100},
+		{Id: 241, Pid: 240, Enabled: 1, Display: 0, Description: "添加App轮播", Url: "AppBannerAddController.Get", Name: "添加App轮播", Icon: "", Sort: 100},
+		{Id: 242, Pid: 240, Enabled: 1, Display: 0, Description: "编辑App轮播", Url: "AppBannerEditController.Get", Name: "编辑App轮播", Icon: "", Sort: 100},
+		{Id: 243, Pid: 240, Enabled: 1, Display: 0, Description: "删除App轮播", Url: "AppBannerIndexController.Delone", Name: "删除App轮播", Icon: "", Sort: 100},
 
 		/* 会员管理 */
 		{Id: 300, Pid: 0, Enabled: 1, Display: 1, Description: "会员管理", Url: "", Name: "会员管理", Icon: "#xe770;", Sort: 100},
@@ -194,9 +199,13 @@ func initDbData() error {
 		// 用户建议
 		{Id: 330, Pid: 300, Enabled: 1, Display: 1, Description: "会员反馈列表", Url: "MemberSuggestIndexController.Get", Name: "会员反馈列表", Icon: "", Sort: 100},
 		{Id: 331, Pid: 330, Enabled: 1, Display: 0, Description: "会员反馈状态设置", Url: "MemberSuggestIndexController.Status", Name: "会员反馈状态设置", Icon: "", Sort: 100},
+		// 用户登录统计
+		{Id: 338, Pid: 300, Enabled: 1, Display: 1, Description: "会员登录统计", Url: "MemberLoginCountIndexController.Get", Name: "会员登录统计", Icon: "", Sort: 100},
 	}
-	if num, err := o.InsertMulti(len(permissions), permissions); err != nil {
-		logs.Warn("Init Permission data success num:", num, " error", err)
+	for _, v := range permissions {
+		if _, _, err := o.ReadOrCreate(&v, "Id"); err != nil {
+			logs.Error("Init Permission id=", v.Id, " error:", err)
+		}
 	}
 	// 角色--权限关联
 	rolePermissions := []RolePermission{
@@ -287,6 +296,11 @@ func initDbData() error {
 
 		{Id: 330, RoleId: 2, PermissionId: 230},
 		{Id: 331, RoleId: 2, PermissionId: 231},
+
+		{Id: 340, RoleId: 2, PermissionId: 240},
+		{Id: 341, RoleId: 2, PermissionId: 241},
+		{Id: 342, RoleId: 2, PermissionId: 242},
+		{Id: 343, RoleId: 2, PermissionId: 243},
 		*/
 		/* 会员管理 */
 		{Id: 400, RoleId: 2, PermissionId: 300},
@@ -294,6 +308,8 @@ func initDbData() error {
 		{Id: 411, RoleId: 2, PermissionId: 311},
 		{Id: 412, RoleId: 2, PermissionId: 312},
 		{Id: 413, RoleId: 2, PermissionId: 313},
+
+		{Id: 438, RoleId: 2, PermissionId: 338},
 		/*
 		{Id: 430, RoleId: 2, PermissionId: 330},
 		{Id: 431, RoleId: 2, PermissionId: 331},
@@ -317,8 +333,10 @@ func initDbData() error {
 		{Id: 1091, RoleId: 10, PermissionId: 91},
 		{Id: 1092, RoleId: 10, PermissionId: 92},
 	}
-	if num, err := o.InsertMulti(len(rolePermissions), rolePermissions); err != nil {
-		logs.Warn("Init RolePermission data success num:", num, " error", err)
+	for _, v := range rolePermissions {
+		if _, _, err := o.ReadOrCreate(&v, "Id"); err != nil {
+			logs.Error("Init RolePermission id=", v.Id, " error:", err)
+		}
 	}
 	if err := o.Commit(); err != nil {
 		logs.Error("db initDbData orm Commit transaction err:", err)
