@@ -89,11 +89,11 @@ func (c *LoginController) Post() {
 		return
 	}
 	if admin.Enabled == 0 {
-		ret["msg"] = "账号已禁用"
+		ret["msg"] = "账号不可用"
 		return
 	}
 	if admin.Locked == 1 {
-		ret["msg"] = "账号已锁定"
+		ret["msg"] = "账号不可用"
 		return
 	}
 	if admin.Password != Md5(pwd, Pubsalt, admin.Salt) {
@@ -140,7 +140,7 @@ func (c *LoginController) Post() {
 
 	if admin.LoginVerify == 2 { // 需要谷歌安全码验证
 		ret["code"] = 3
-		ret["msg"] = "请输入谷歌安全码"
+		ret["msg"] = "请输入安全码"
 		return
 	}
 

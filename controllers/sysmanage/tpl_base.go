@@ -13,7 +13,7 @@ var tplBase = `
     <link rel="stylesheet" href="{{.static_url}}/static/layui/css/layui.css" media="all">
     <link rel="stylesheet" href="{{.static_url}}/static/back/css/common.css" media="all">
     <style>
-        .header {background-color: #393D49;}
+        .header {background-color: #23262E!important;}
         .header .logo {padding-top: 20px; margin-left: 20px; color: #f2f2f2; font-size: 18px;}
         .layui-layout-admin .layui-body {bottom: 0px;}
         .base-iframe{position: absolute; width: 100%; height: 100%; left: 0; top: 0; right: 0; bottom: 0;}
@@ -80,16 +80,22 @@ var tplBase = `
                 </li>
             {{range $index, $vo := .mainMenuList}}
                 <li class="layui-nav-item">
-                    <a href="javascript:;"><i class="layui-icon">&{{$vo.Icon}}</i><span class="main-nav-title">{{$vo.Name}}</span></a>
-                    <dl class="layui-nav-child">
-                    {{range $i, $menu := index $.secdMenuMap $vo.Id}}
-                        <dd><a class="nav-base-iframe" href='{{urlfor $menu.Url}}'>
-                                <span class="main-nav-title">{{$menu.Name}}</span>
-                                <span class="main-nav-abbr">{{substr $menu.Name 0 1}}</span>
-                            </a>
-                        </dd>
-                    {{end}}
-                    </dl>
+					{{if $vo.Url}}
+						<a class="nav-base-iframe" href='{{urlfor $vo.Url}}'>
+							<i class="layui-icon">&{{$vo.Icon}}</i><span class="main-nav-title">{{$vo.Name}}</span>
+						</a>
+					{{else}}
+						<a href="javascript:;"><i class="layui-icon">&{{$vo.Icon}}</i><span class="main-nav-title">{{$vo.Name}}</span></a>
+						<dl class="layui-nav-child">
+						{{range $i, $menu := index $.secdMenuMap $vo.Id}}
+							<dd><a class="nav-base-iframe" href='{{urlfor $menu.Url}}'>
+									<span class="main-nav-title">{{$menu.Name}}</span>
+									<span class="main-nav-abbr">{{substr $menu.Name 0 1}}</span>
+								</a>
+							</dd>
+						{{end}}
+						</dl>
+					{{end}}
                 </li>
             {{end}}
             </ul>

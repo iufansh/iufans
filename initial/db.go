@@ -125,7 +125,7 @@ func initDbData() error {
 		{Id: 5, Pid: 3, Enabled: 1, Display: 0, Description: "登录谷歌验证提交", Url: "SysIndexController.PostAuth", Name: "登录谷歌验证提交", Icon: "", Sort: 3},
 		{Id: 10, Pid: 0, Enabled: 1, Display: 0, Description: "系统通用-单文件上传", Url: "SyscommonController.Upload", Name: "系统通用-单文件上传", Icon: "", Sort: 10},
 		{Id: 11, Pid: 0, Enabled: 1, Display: 0, Description: "系统通用-多文件上传", Url: "SyscommonController.UploadMulti", Name: "系统通用-多文件上传", Icon: "", Sort: 10},
-		{Id: 20, Pid: 0, Enabled: 1, Display: 1, Description: "系统设置", Url: "", Name: "系统设置", Icon: "#xe716;", Sort: 100},
+		{Id: 20, Pid: 0, Enabled: 1, Display: 1, Description: "系统设置", Url: "", Name: "系统设置", Icon: "#xe716;", Sort: 20},
 		{Id: 21, Pid: 20, Enabled: 1, Display: 1, Description: "管理员", Url: "AdminIndexController.Get", Name: "管理员", Icon: "", Sort: 100},
 		{Id: 22, Pid: 21, Enabled: 1, Display: 0, Description: "添加管理员", Url: "AdminAddController.Get", Name: "添加管理员", Icon: "", Sort: 100},
 		{Id: 23, Pid: 21, Enabled: 1, Display: 0, Description: "编辑管理员", Url: "AdminEditController.Get", Name: "编辑管理员", Icon: "", Sort: 100},
@@ -171,6 +171,7 @@ func initDbData() error {
 		{Id: 122, Pid: 120, Enabled: 1, Display: 0, Description: "编辑常见问题", Url: "NormalQuestionEditController.Get", Name: "编辑常见问题", Icon: "", Sort: 100},
 		{Id: 123, Pid: 120, Enabled: 1, Display: 0, Description: "删除常见问题", Url: "NormalQuestionIndexController.Delone", Name: "删除常见问题", Icon: "", Sort: 100},
 
+		{Id: 140, Pid: 20, Enabled: 1, Display: 1, Description: "后台任务表", Url: "BackTaskIndexController.Get", Name: "后台任务表", Icon: "", Sort: 100},
 		/* 应用管理 */
 		{Id: 200, Pid: 0, Enabled: 1, Display: 1, Description: "应用管理", Url: "", Name: "应用管理", Icon: "#xe653;", Sort: 100},
 		{Id: 210, Pid: 200, Enabled: 1, Display: 1, Description: "App版本列表", Url: "AppVersionIndexController.Get", Name: "App版本列表", Icon: "", Sort: 100},
@@ -196,6 +197,8 @@ func initDbData() error {
 		{Id: 311, Pid: 310, Enabled: 1, Display: 0, Description: "编辑会员", Url: "MemberEditController.Get", Name: "编辑会员", Icon: "", Sort: 100},
 		{Id: 312, Pid: 310, Enabled: 1, Display: 0, Description: "删除会员", Url: "MemberIndexController.Delone", Name: "删除会员", Icon: "", Sort: 100},
 		{Id: 313, Pid: 310, Enabled: 1, Display: 0, Description: "锁定解锁会员", Url: "MemberIndexController.Locked", Name: "锁定解锁会员", Icon: "", Sort: 100},
+		// 会员vip开通记录
+		{Id: 320, Pid: 300, Enabled: 1, Display: 0, Description: "会员vip开通记录", Url: "MemberVipLogIndexController.Get", Name: "会员vip开通记录", Icon: "", Sort: 100},
 		// 用户建议
 		{Id: 330, Pid: 300, Enabled: 1, Display: 1, Description: "会员反馈列表", Url: "MemberSuggestIndexController.Get", Name: "会员反馈列表", Icon: "", Sort: 100},
 		{Id: 331, Pid: 330, Enabled: 1, Display: 0, Description: "会员反馈状态设置", Url: "MemberSuggestIndexController.Status", Name: "会员反馈状态设置", Icon: "", Sort: 100},
@@ -281,6 +284,7 @@ func initDbData() error {
 		{Id: 221, RoleId: 2, PermissionId: 121},
 		{Id: 222, RoleId: 2, PermissionId: 122},
 		{Id: 223, RoleId: 2, PermissionId: 123},
+		{Id: 240, RoleId: 2, PermissionId: 140},
 
 		/* 应用管理 */
 		/* 默认不开启
@@ -302,12 +306,14 @@ func initDbData() error {
 		{Id: 342, RoleId: 2, PermissionId: 242},
 		{Id: 343, RoleId: 2, PermissionId: 243},
 		*/
-		/* 会员管理 */
+		/* 会员管理
 		{Id: 400, RoleId: 2, PermissionId: 300},
 		{Id: 410, RoleId: 2, PermissionId: 310},
 		{Id: 411, RoleId: 2, PermissionId: 311},
 		{Id: 412, RoleId: 2, PermissionId: 312},
 		{Id: 413, RoleId: 2, PermissionId: 313},
+
+		{Id: 420, RoleId: 2, PermissionId: 320},
 
 		{Id: 438, RoleId: 2, PermissionId: 338},
 		/*

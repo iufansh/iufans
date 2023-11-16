@@ -24,7 +24,7 @@ type Member struct {
 	AppVersion        int
 	Username          string `orm:"unique;size(127)"`
 	ThirdAuthId       string // 三方登录的ID, 比如微信的unionid，华为的AuthHuaweiId
-	RegType           int    // 注册类型 1-手机号；2-微信；3-支付宝；4-QQ；5-本机号码一键登录
+	RegType           int    // 注册类型 1-手机号；2-微信；3-支付宝；4-QQ；5-本机号码一键登录；6-Apple登录；7-游客模式
 	Name              string
 	Mobile            string
 	Password          string

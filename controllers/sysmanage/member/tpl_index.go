@@ -36,6 +36,8 @@ var tplIndex = `
                                     <option value="3" {{if eq .condArr.regType 3}} selected="selected"{{end}}>支付宝</option>
                                     <option value="4" {{if eq .condArr.regType 4}} selected="selected"{{end}}>QQ</option>
                                     <option value="5" {{if eq .condArr.regType 5}} selected="selected"{{end}}>本机号码</option>
+                                    <option value="6" {{if eq .condArr.regType 6}} selected="selected"{{end}}>Apple</option>
+                                    <option value="7" {{if eq .condArr.regType 7}} selected="selected"{{end}}>游客</option>
 								</select>
                             </div>
                         </div>
@@ -59,8 +61,9 @@ var tplIndex = `
 							<thead>
 							<tr>
 								<th>ID</th>
+								<th>头像</th>
 								<th>用户名</th>
-								<th>名称</th>
+								<th>昵称</th>
 								<th>三方登录ID</th>
 								<th>VIP</th>
 								<th>是否可用</th>
@@ -75,10 +78,15 @@ var tplIndex = `
 							{{range $index, $vo := .dataList}}
 								<tr>
 									<td>{{$vo.Id}}</td>
+									<td>{{if $vo.Avatar}}
+                                        <div id="imgView-{{$vo.Id}}" class="img-view">
+                                            <img layer-pid="{{$vo.Id}}" layer-src="{{$vo.Avatar}}" src="{{$vo.Avatar}}" alt="{{$vo.Avatar}}" height="30" width="30">
+                                        </div>
+									{{end}}</td>
 									<td>{{$vo.Username}}</td>
 									<td>{{$vo.Name}}</td>
 									<td>{{$vo.ThirdAuthId}}</td>
-									<td><span class="layui-word-aux">等级:</span>{{$vo.Vip}}
+									<td><span class="layui-word-aux"><a href='{{$.urlMemberVipLogIndex}}?memberId={{$vo.Id}}'>等级:</a></span>{{$vo.Vip}}
 										<span class="layui-hide">开通:{{date $vo.VipTime "Y-m-d H:i:s"}}</span>
 										<br><span class="layui-word-aux">过期:</span>{{if ne (date $vo.VipExpire "Y-m-d") "0001-01-01"}}{{date $vo.VipExpire "Y-m-d H:i:s"}}{{end}}
 									</td>
@@ -93,12 +101,16 @@ var tplIndex = `
 											QQ
 										{{else if eq $vo.RegType 5}}
 											本机号
+										{{else if eq $vo.RegType 6}}
+											Apple
+										{{else if eq $vo.RegType 7}}
+											游客
 										{{end}}
 									</td>
 									<td>{{$vo.AppNo}}-{{$vo.AppChannel}}-{{$vo.AppVersion}}</td>
 									<td>{{date $vo.CreateDate "Y-m-d H:i:s"}}</td>
-									<td><span class="layui-word-aux">时间:</span>{{date $vo.LoginDate "Y-m-d H:i:s"}}
-										<br><span class="layui-word-aux">IP:</span>{{$vo.LoginIp}}
+									<td><!-- span class="layui-word-aux">时间:</span -->{{date $vo.LoginDate "Y-m-d H:i:s"}}
+										<!-- br --><span class="layui-word-aux layui-hide">IP:{{$vo.LoginIp}}</span>
 									</td>
 									<td>
 									{{if eq $vo.Locked 0}}
@@ -122,6 +134,14 @@ var tplIndex = `
 	</div>
 </div>
 {{.Scripts}}
+<script>
+    layui.use('layer',function(){
+        var layer=layui.layer;
+        layer.photos({
+            photos: '.img-view'
+        });
+    });
+</script>
 </body>
 </html>
 `

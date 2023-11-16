@@ -5,6 +5,8 @@ import (
 	"github.com/astaxie/beego/orm"
 	. "github.com/iufansh/iufans/models"
 	utils2 "github.com/iufansh/iufans/utils"
+	"github.com/iufansh/iutils"
+	"iueun/studyreader/utils"
 )
 
 type NormalQuestionApiController struct {
@@ -20,6 +22,14 @@ desc:
 */
 func (c *NormalQuestionApiController) Get() {
 	defer c.RetJSON()
+
+	forbiddenArea := GetSiteConfigValue(utils.ScApiIpForbidden)
+	if allowed := iutils.CheckIpAllowed(forbiddenArea, c.Ctx.Input.IP()); !allowed {
+		c.Code = utils2.CODE_OK
+		c.Msg = "没有内容"
+		c.Dta = []map[string]interface{}{}
+		return
+	}
 
 	o := orm.NewOrm()
 	qs := o.QueryTable(new(NormalQuestion)).OrderBy("Seq").Limit(10)

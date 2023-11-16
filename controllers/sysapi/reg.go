@@ -6,6 +6,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	fm "github.com/iufansh/iufans/models"
 	. "github.com/iufansh/iutils"
+	"strconv"
 	"time"
 
 	"encoding/json"
@@ -114,6 +115,73 @@ func (c *RegApiController) Post() {
 	return
 }
 
+type touristParam struct {
+	Uuid string `json:"uuid"`
+}
+
+func (c *RegApiController) PostTourist() {
+	defer c.RetJSON()
+	var p touristParam
+	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &p); err != nil {
+		c.Code = utils.CODE_ERROR
+		c.Msg = "参数格式错误"
+		return
+	}
+	o := orm.NewOrm()
+	var model Member
+	var isNew bool
+	if p.Uuid == "" {
+		p.Uuid = "TOU_" + Md5("tourist", strconv.FormatInt(time.Now().Unix(), 10), strconv.FormatInt(int64(RandNum(1, 1000000)), 10))
+		isNew = true
+	} else {
+		if err := o.QueryTable(new(Member)).Filter("Username", p.Uuid).One(&model); err != nil {
+			if err == orm.ErrNoRows {
+				isNew = true
+			} else {
+				c.Msg = "访问失败，请重试"
+				return
+			}
+		}
+	}
+	if isNew {
+		var err error
+		model, err = CreateMemberReg(7, c.AppNo, c.AppChannel, c.AppVersionCode, 0, p.Uuid, p.Uuid, "", "", "")
+		if err != nil {
+			c.Msg = "访问失败，请重试W2"
+			return
+		}
+	}
+
+	// 自动登录
+	model.LoginIp = c.Ctx.Input.IP()
+	// 以下两个是用于统计登录次数
+	model.AppNo = c.AppNo
+	model.AppChannel = c.AppChannel
+	model.AppVersion = c.AppVersionCode
+	_, _, token := UpdateMemberLoginStatus(model)
+
+	c.Msg = "访问成功"
+	c.Code = utils.CODE_OK
+	var vipEffect int
+	if model.Vip > 0 && !model.VipExpire.IsZero() && model.VipExpire.After(time.Now().AddDate(0, 0, -1)) {
+		vipEffect = 1
+	}
+	c.Dta = map[string]interface{}{
+		"uuid": 	  model.Username, // 仅游客模式有
+		"id":         model.Id,
+		"token":      token,
+		"phone":      model.GetFmtMobile(),
+		"nickname":   model.Name,
+		"autoLogin":  true,
+		"avatar":     model.GetFullAvatar(c.Ctx.Input.Site()),
+		"inviteCode": utils.GenInviteCode(model.Id),
+		"vipEffect":  vipEffect,
+		"vip":        model.Vip,
+		"vipExpire":  FormatDate(model.VipExpire),
+	}
+	return
+}
+
 func CreateMemberReg(regType int, appNo, appChannel string, appVersion int, refId int64, username string, password string, name string, thirdAuthId string, avatar string) (model Member, err error) {
 	model.RegType = regType
 	model.AppNo = appNo
@@ -131,7 +199,11 @@ func CreateMemberReg(regType int, appNo, appChannel string, appVersion int, refI
 		if len(model.Username) == 11 && strings.HasPrefix(model.Username, "1") {
 			model.Name = SubString(model.Username, 0, 3) + "*****" + SubString(model.Username, 8, 3)
 		} else {
-			model.Name = fmt.Sprintf("会员%d", RandNum(1, 1000000))
+			if model.RegType == 7 {
+				model.Name = fmt.Sprintf("游客%d", RandNum(1, 1000000))
+			} else {
+				model.Name = fmt.Sprintf("会员%d", RandNum(1, 1000000))
+			}
 		}
 	} else {
 		model.Name = name

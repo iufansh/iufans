@@ -1,6 +1,10 @@
 package initial
 
-import . "github.com/iufansh/iufans/utils"
+import (
+	"github.com/astaxie/beego"
+	. "github.com/iufansh/iufans/utils"
+	"strings"
+)
 
 func init() {
 	InitLog()
@@ -8,4 +12,12 @@ func init() {
 	InitCache()
 	InitFilter()
 	InitSysTemplateFunc()
+
+	domainUri := beego.AppConfig.String("domainuri")
+	if domainUri != "" {
+		if !strings.HasPrefix(domainUri, "/") {
+			domainUri = "/" + domainUri
+		}
+		beego.SetStaticPath( domainUri + "/static", "static")
+	}
 }

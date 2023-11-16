@@ -7,6 +7,8 @@ import (
 	"github.com/astaxie/beego/orm"
 	. "github.com/iufansh/iufans/models"
 	utils2 "github.com/iufansh/iufans/utils"
+	"github.com/iufansh/iutils"
+	"iueun/studyreader/utils"
 	"strings"
 	"time"
 )
@@ -24,6 +26,13 @@ desc:
 */
 func (c *AppVersionApiController) Get() {
 	defer c.RetJSON()
+
+	forbiddenArea := GetSiteConfigValue(utils.ScApiIpForbidden)
+	if allowed := iutils.CheckIpAllowed(forbiddenArea, c.Ctx.Input.IP()); !allowed {
+		c.Msg = "没有新版"
+		return
+	}
+
 	currentVersion, err := c.GetInt("ver", 0)
 	if err != nil || currentVersion == 0 {
 		c.Msg = "当前版本号为空"
@@ -34,11 +43,15 @@ func (c *AppVersionApiController) Get() {
 	if appNo == "" {
 		appNo = c.GetString("app")
 	}
+	auto, _ := c.GetInt("auto", 0)
 	o := orm.NewOrm()
 	qs := o.QueryTable(new(AppVersion))
 	qs = qs.Filter("AppNo", appNo)
 	qs = qs.Filter("OsType", osType)
 	qs = qs.Filter("VersionNo__gt", currentVersion)
+	if auto == 1 {
+		qs = qs.Filter("Ignorable", 0)
+	}
 	qs = qs.Filter("PublishTime__lt", time.Now())
 	qs = qs.OrderBy("-VersionNo", "-Id")
 	qs = qs.Limit(1)
@@ -83,6 +96,21 @@ return:
 desc:
 */
 func (c *AppVersionApiController) Post() {
+	handleCheck(c, false)
+}
+
+func (c *AppVersionApiController) PostAuto() {
+	handleCheck(c, true)
+}
+
+func handleCheck(c *AppVersionApiController, auto bool) {
+
+	forbiddenArea := GetSiteConfigValue(utils.ScApiIpForbidden)
+	if allowed := iutils.CheckIpAllowed(forbiddenArea, c.Ctx.Input.IP()); !allowed {
+		c.Msg = "没有"
+		return
+	}
+
 	var code = 1
 	var msg string
 	var updateStatus int8
@@ -137,17 +165,22 @@ func (c *AppVersionApiController) Post() {
 		msg = "App编号为空"
 		return
 	}
-	// 渠道不为空时，拼接上渠道
-	if appChannel != "" {
-		appNo = appNo + "-" + appChannel
-	}
+
 	o := orm.NewOrm()
 	qs := o.QueryTable(new(AppVersion))
-	qs = qs.Filter("AppNo", appNo)
+	// 渠道不为空时，拼接上渠道
+	if appChannel != "" {
+		qs = qs.Filter("AppNo__in", appNo, appNo + "-" + appChannel)
+	} else {
+		qs = qs.Filter("AppNo", appNo)
+	}
+	if auto {
+		qs = qs.Filter("Ignorable", 0)
+	}
 	qs = qs.Filter("OsType", osType)
 	qs = qs.Filter("VersionNo__gt", currentVersion)
 	qs = qs.Filter("PublishTime__lt", time.Now())
-	qs = qs.OrderBy("-VersionNo", "-Id")
+	qs = qs.OrderBy("-VersionNo", "-AppNo", "-Id")
 	qs = qs.Limit(1)
 	var appVersion AppVersion
 	if err := qs.One(&appVersion); err != nil {

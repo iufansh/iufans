@@ -29,6 +29,7 @@ func InitFilter() {
 	beego.InsertFilter(adminRouter+"/*", beego.BeforeExec, filterHttpGet)
 }
 
+var domainUri = beego.AppConfig.String("domainuri")
 var staticUrl = beego.AppConfig.String("staticurl")
 
 var htmlHead = `
@@ -56,6 +57,14 @@ var filterMethod = func(ctx *context.Context) {
 
 var filterHttpGet = func(ctx *context.Context) {
 	if ctx.Input.Method() == http.MethodGet {
+		if staticUrl == "" {
+			if domainUri != "" {
+				if !strings.HasSuffix(domainUri, "/") {
+					domainUri = "/" + domainUri
+				}
+				staticUrl = domainUri
+			}
+		}
 		// 设置公共参数
 		expire := int64(beego.BConfig.WebConfig.XSRFExpire)
 		xsrfKey := ctx.XSRFToken(beego.BConfig.WebConfig.XSRFKey, expire)

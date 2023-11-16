@@ -38,13 +38,18 @@ func (c *MemberApiController) GetVip() {
 		return
 	}
 	var vipEffect int
-	if member.Vip > 0 && !member.VipExpire.IsZero() && member.VipExpire.After(time.Now().AddDate(0, 0, -1)) {
+	if member.Vip > 0 && !member.VipExpire.IsZero() && TimeSub(member.VipExpire, time.Now()) >= 0 {
 		vipEffect = 1
 	}
+	// 特殊处理
+	if vipEffect == 0 && member.VipExpire.IsZero() {
+		member.Vip = 0
+	}
+
 	c.Dta = map[string]interface{}{
-		"vipEffect": vipEffect,
-		"vip":       member.Vip,
-		"vipExpire": FormatDate(member.VipExpire),
+		"vipEffect": vipEffect,                    // vip是否有效
+		"vip":       member.Vip,                   // vip等级
+		"vipExpire": FormatDate(member.VipExpire), // vip过期时间
 	}
 	c.Code = utils.CODE_OK
 	c.Msg = "ok"
@@ -120,6 +125,83 @@ func (c *MemberApiController) BindPhone() {
 }
 
 /*
+api已通过其他方式登录的（如微信）且绑定过手机号，通过此接口解除手机号
+param:
+body:{"authCode":2356,"username":"13111111111","password":"32md5小写"}
+return:{"code":1,"msg":"成功","data":"ok"}
+desc:
+*/
+func (c *MemberApiController) UnBindPhone() {
+	defer c.RetJSON()
+	var p bindParam
+	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &p); err != nil {
+		c.Code = utils.CODE_ERROR
+		c.Msg = "参数格式错误"
+		return
+	}
+	p.Password = strings.ToLower(p.Password)
+
+	model := Member{
+		Username: p.Username,
+		Password: p.Password,
+	}
+	if p.AuthCode == "" {
+		c.Msg = "短信验证码必填"
+		return
+	}
+	if ok := utils.VerifySmsVerifyCode(model.Username, p.AuthCode); !ok {
+		c.Msg = "短信验证码错误"
+		return
+	}
+	valid := validation.Validation{}
+	valid.Required(model.Username, "errmsg").Message("手机号必填")
+	valid.Length(model.Username, 11, "errmsg").Message("手机号必须是11位数字")
+	valid.Required(model.Password, "errmsg").Message("密码必填")
+	valid.Length(model.Password, 32, "errmsg").Message("密码格式错误")
+	if valid.HasErrors() {
+		for _, err := range valid.Errors {
+			c.Msg = err.Message
+			return
+		}
+	}
+	// 验证用户名是否存在
+	o := orm.NewOrm()
+	var member Member
+	if err := o.QueryTable(new(Member)).Filter("Username", model.Username).One(&member); err != nil {
+		if err == orm.ErrNoRows {
+			c.Msg = "当前手机号不存在，请确认"
+			return
+		} else {
+			c.Msg = "异常，请重试"
+			return
+		}
+	}
+	if member.Password != Md5(p.Password, Pubsalt, member.Salt) {
+		c.Msg = "密码错误"
+		return
+	}
+	if member.ThirdAuthId == "" {
+		c.Msg = "手机号是唯一登录方式，无法解绑"
+		return
+	}
+
+	model.Password = ""
+	model.Salt = ""
+	model.Mobile = ""
+	model.Username = member.ThirdAuthId
+	model.Id = c.LoginMemberId
+
+	if num, err := o.Update(&model, "Username", "Mobile", "Password", "Salt"); err != nil || num != 1 {
+		c.Msg = "解绑失败，请重试"
+		return
+	}
+
+	c.Msg = "解绑成功"
+	c.Code = utils.CODE_OK
+	c.Dta = ""
+}
+
+/*
 api注销账号
 param:
 body:
@@ -132,6 +214,8 @@ func (c *MemberApiController) CancelAccount() {
 	member.Id = c.LoginMemberId
 	member.Username = "mCancelled_" + strconv.FormatInt(member.Id, 10)
 	member.Password = "mCancelled"
+	member.Name = member.Username
+	member.Mobile = ""
 	member.ThirdAuthId = ""
 	member.Token = ""
 	member.Cancelled = 1
@@ -174,9 +258,7 @@ func (c *MemberApiController) ModifyName() {
 	p.Name = strings.ReplaceAll(p.Name, "<", "")
 	p.Name = strings.ReplaceAll(p.Name, ">", "")
 	if p.Name == "" {
-		c.Code = utils.CODE_ERROR
-		c.Msg = "昵称必须填写"
-		return
+		p.Name = "用户" + utils.GenInviteCode(c.LoginMemberId)
 	}
 	if len(p.Name) > 20 {
 		c.Code = utils.CODE_ERROR
@@ -233,7 +315,7 @@ func (c *MemberApiController) ModifyName() {
 
 	c.Msg = "修改成功"
 	c.Code = utils.CODE_OK
-	c.Dta = "修改成功"
+	c.Dta = p.Name
 }
 
 /*
@@ -282,10 +364,18 @@ func (c *MemberApiController) UploadAvatar() {
 	}
 
 	o := orm.NewOrm()
-	member := Member{
-		Id:     c.LoginMemberId,
-		Avatar: "/" + uploadName,
+	var member Member
+	if err := o.QueryTable(new(Member)).Filter("Id", c.LoginMemberId).One(&member); err != nil {
+		c.Msg = "上册失败，请重新登录再试"
+		return
 	}
+	if member.Avatar != "" {
+		if err := os.Remove(strings.TrimPrefix(member.Avatar, "/")); err != nil {
+			logs.Error("MemberApiController UploadAvatar remove avatrar err:", err)
+		}
+	}
+
+	member.Avatar = "/" + uploadName
 	if num, err := o.Update(&member, "Avatar"); err != nil || num != 1 {
 		c.Msg = "修改失败，请重试"
 		return

@@ -13,6 +13,7 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type NestPreparer interface {
@@ -181,7 +182,19 @@ func (c *BaseIndexController) Get() {
 		c.Data["mainMenuList"] = mainMenuList
 		c.Data["secdMenuMap"] = secdMenuMap
 	}
-	c.Data["static_url"] = beego.AppConfig.String("staticurl")
+
+	var domainUri = beego.AppConfig.String("domainuri")
+	var staticUrl = beego.AppConfig.String("staticurl")
+
+	if staticUrl == "" {
+		if domainUri != "" {
+			if !strings.HasSuffix(domainUri, "/") {
+				domainUri = "/" + domainUri
+			}
+			staticUrl = domainUri
+		}
+	}
+	c.Data["static_url"] = staticUrl
 	c.Data["siteName"] = GetSiteConfigValue(utils.Scname)
 
 	if t, err := template.New("tplBaseIndex.tpl").Funcs(map[string]interface{}{

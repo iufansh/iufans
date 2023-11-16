@@ -118,7 +118,11 @@ func UpdateMemberLoginStatus(member Member) (code int, msg, token string) {
 	lifeTime := beego.AppConfig.String("apitokenlifetime")
 	expTime, _ := time.ParseDuration(lifeTime)
 
-	member.TokenExpTime = time.Now().Add(expTime)
+	if member.RegType == 7 { // 游客模式过期固定3年
+		member.TokenExpTime = time.Now().AddDate(3, 0, 0)
+	} else {
+		member.TokenExpTime = time.Now().Add(expTime)
+	}
 	token = Md5(member.Username, Pubsalt, strconv.FormatInt(time.Now().Unix(), 10))
 	member.Token = token
 	member.Locked = 0

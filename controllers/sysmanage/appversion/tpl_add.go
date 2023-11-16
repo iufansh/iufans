@@ -97,7 +97,7 @@ var tplAdd = `
 									<input type="radio" name="Ignorable" value="1" title="可忽略" checked="checked">
 									<input type="radio" name="Ignorable" value="0" title="不可">
 								</div>
-                                <div class="layui-form-mid layui-word-aux">非强制更新才能忽略</div>
+                                <div class="layui-form-mid layui-word-aux">非强制更新才能忽略，可忽略时不提示更新</div>
 							</div>
                             <div class="layui-form-item">
                                 <label class="layui-form-label">版本描述</label>

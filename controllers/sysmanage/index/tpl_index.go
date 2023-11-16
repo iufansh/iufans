@@ -14,7 +14,7 @@ var tplIndex = `
 
             {{if eq .loginVerify 0}}
                 <blockquote class="layui-elem-quote layui-quote-nm">
-                    <span style="color: red;">为了您的账户安全，请绑定谷歌安全验证器</span>
+                    <span style="color: red;">为了您的账户安全，请绑定安全验证器</span>
                     <a class="layui-btn layui-btn-normal layui-btn-sm" href='{{.urlIndexGetAuth}}'>点击前往绑定</a>
                 </blockquote>
             {{else}}

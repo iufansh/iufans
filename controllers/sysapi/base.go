@@ -31,16 +31,16 @@ type BaseApiController struct {
 
 func (c *BaseApiController) Prepare() {
 	c.EnableXSRF = false
-	logs.Info("\r\n----------request---------",
+	logs.Info("\r\n---request---",
 		"\r\nUri:", c.Ctx.Input.URI(),
-		"\r\nMethod:", c.Ctx.Input.Method(),
-		"\r\nFrom ip:", c.Ctx.Input.IP(),
-		"\r\nUserAgent:", c.Ctx.Input.UserAgent(),
-		"\r\nReferer:", c.Ctx.Input.Referer(),
+		//"\r\nMethod:", c.Ctx.Input.Method(),
+		//"\r\nFrom ip:", c.Ctx.Input.IP(),
+		//"\r\nUserAgent:", c.Ctx.Input.UserAgent(),
+		//"\r\nReferer:", c.Ctx.Input.Referer(),
 		"\r\nHeader Qx-Api-App:", c.Ctx.Input.Header("Qx-Api-App"),
 		"\r\nHeader Qx-Api-Token:", c.Ctx.Input.Header("Qx-Api-Token"),
-		"\r\nBody:", string(c.Ctx.Input.RequestBody),
-		"\r\n--------------------------")
+		//"\r\nBody:", string(c.Ctx.Input.RequestBody),
+		"\r\n------")
 
 	// 格式：AppNo;appChannel;deviceId;appVersionCode
 	apiApp := c.Ctx.Input.Header("Qx-Api-App")
@@ -96,13 +96,13 @@ func (c *BaseApiController) Prepare() {
 	}
 	if err != nil || c.LoginMemberId <= 0 {
 		c.Code = utils.CODE_NEED_LOGIN
-		c.Msg = "用户ID为空"
+		c.Msg = "请重新登录"
 		c.RetJSON()
 		return
 	}
 	if token == "" {
 		c.Code = utils.CODE_NEED_LOGIN
-		c.Msg = "token为空"
+		c.Msg = "请重新登录"
 		c.RetJSON()
 		return
 	}
@@ -111,7 +111,7 @@ func (c *BaseApiController) Prepare() {
 	if err := o.QueryTable(new(Member)).Filter("Id", c.LoginMemberId).One(&member, "Enabled", "Locked", "Token", "TokenExpTime"); err != nil {
 		if err == orm.ErrNoRows {
 			c.Code = utils.CODE_NEED_LOGIN
-			c.Msg = "用户不存在"
+			c.Msg = "请重新登录"
 			c.RetJSON()
 			return
 		} else {
@@ -166,16 +166,16 @@ type Base2ApiController struct {
 
 func (c *Base2ApiController) Prepare() {
 	c.EnableXSRF = false
-	logs.Info("\r\n----------request---------",
+	logs.Info("\r\n---request---",
 		"\r\nUri:", c.Ctx.Input.URI(),
-		"\r\nMethod:", c.Ctx.Input.Method(),
-		"\r\nFrom ip:", c.Ctx.Input.IP(),
-		"\r\nUserAgent:", c.Ctx.Input.UserAgent(),
-		"\r\nReferer:", c.Ctx.Input.Referer(),
+		//"\r\nMethod:", c.Ctx.Input.Method(),
+		//"\r\nFrom ip:", c.Ctx.Input.IP(),
+		//"\r\nUserAgent:", c.Ctx.Input.UserAgent(),
+		//"\r\nReferer:", c.Ctx.Input.Referer(),
 		"\r\nHeader Qx-Api-App:", c.Ctx.Input.Header("Qx-Api-App"),
 		"\r\nHeader Qx-Api-Token:", c.Ctx.Input.Header("Qx-Api-Token"),
-		"\r\nBody:", string(c.Ctx.Input.RequestBody),
-		"\r\n--------------------------")
+		//"\r\nBody:", string(c.Ctx.Input.RequestBody),
+		"\r\n------")
 
 	// 格式：AppNo;appChannel;deviceId;appVersionCode
 	apiApp := c.Ctx.Input.Header("Qx-Api-App")
@@ -221,6 +221,8 @@ func (c *Base2ApiController) Prepare() {
 	}
 	if err == nil && c.LoginMemberId > 0 && token != "" {
 		c.IsLogon = true
+	} else {
+		c.LoginMemberId = 0
 	}
 	if app, ok := c.AppController.(ApiPreparer); ok {
 		app.ApiPreparer()

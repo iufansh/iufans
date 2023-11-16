@@ -38,6 +38,7 @@ const (
 const (
 	PayTypeAlipay    = "alipay"
 	PayTypeWechatPay = "wechatpay"
+	PayTypeApplePay = "applepay"
 )
 
 const (

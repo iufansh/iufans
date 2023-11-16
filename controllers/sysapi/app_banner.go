@@ -4,6 +4,8 @@ import (
 	"github.com/astaxie/beego/orm"
 	. "github.com/iufansh/iufans/models"
 	utils2 "github.com/iufansh/iufans/utils"
+	"github.com/iufansh/iutils"
+	"iueun/studyreader/utils"
 )
 
 type AppBannerApiController struct {
@@ -19,6 +21,13 @@ desc:
 */
 func (c *AppBannerApiController) Get() {
 	defer c.RetJSON()
+
+	forbiddenArea := GetSiteConfigValue(utils.ScApiIpForbidden)
+	if allowed := iutils.CheckIpAllowed(forbiddenArea, c.Ctx.Input.IP()); !allowed {
+		c.Msg = "获取失败"
+		return
+	}
+
 	o := orm.NewOrm()
 	qs := o.QueryTable(new(AppBanner))
 	qs = qs.Filter("AppNo", c.AppNo)

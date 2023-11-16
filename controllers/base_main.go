@@ -6,7 +6,6 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/iufansh/iufans/utils"
-	"github.com/iufansh/iutils"
 	"net/http"
 	"strings"
 )
@@ -50,12 +49,12 @@ func (c *BaseMainController) RetJSON() {
 	} else {
 		ret["data"] = c.Dta
 	}
-	b, _ := json.Marshal(ret)
+	//b, _ := json.Marshal(ret)
 
-	logs.Info("\r\n----------response---------",
-		"\r\n", iutils.SubString(string(b), 0, 300),
+	//logs.Debug("\r\n----------response---------",
+		//"\r\n", iutils.SubString(string(b), 0, 300),
 		//"\r\n", string(b),
-		"\r\n-------------------------",)
+	//	"\r\n-------------------------",)
 
 	c.Data["json"] = ret
 	c.ServeJSON()
@@ -81,14 +80,14 @@ func (c *BaseMainController) RetJSONOrigin() {
 
 	if err != nil {
 		http.Error(c.Ctx.Output.Context.ResponseWriter, err.Error(), http.StatusInternalServerError)
-		beego.Error("BaseMainController marshal err:", err)
+		logs.Error("BaseMainController marshal err:", err)
 		return
 	}
 
-	beego.Info("\r\n----------response origin---------",
-		//"\r\n", iutils.SubString(bf.String(), 0, 300),
-		"\r\n", bf.String(),
-		"\r\n-------------------------",)
+	//logs.Debug("\r\n----------response origin---------",
+	//	"\r\n", iutils.SubString(bf.String(), 0, 300),
+		//"\r\n", bf.String(),
+	//	"\r\n-------------------------",)
 
 	c.Ctx.Output.Body(bf.Bytes())
 }

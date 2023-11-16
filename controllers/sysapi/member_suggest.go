@@ -9,6 +9,7 @@ import (
 	. "github.com/iufansh/iufans/models"
 	utils2 "github.com/iufansh/iufans/utils"
 	"github.com/iufansh/iutils"
+	"iueun/studyreader/utils"
 	"strings"
 )
 
@@ -29,6 +30,15 @@ desc:
 */
 func (c *MemberSuggestApiController) Get() {
 	defer c.RetJSON()
+
+	forbiddenArea := GetSiteConfigValue(utils.ScApiIpForbidden)
+	if allowed := iutils.CheckIpAllowed(forbiddenArea, c.Ctx.Input.IP()); !allowed {
+		c.Code = utils2.CODE_OK
+		c.Msg = "没有消息"
+		c.Dta = []map[string]interface{}{}
+		return
+	}
+
 	o := orm.NewOrm()
 	var suggests []MemberSuggest
 	if _, err := o.QueryTable(new(MemberSuggest)).Filter("MemberId", c.LoginMemberId).OrderBy("-Id").Limit(10).All(&suggests); err != nil {

@@ -198,7 +198,7 @@ func (c *LoginWxApiController) PostUserInfo() {
 	err = wechat.DecryptOpenDataToStruct(p.EncryptedData, p.Iv, sessionRsp.SessionKey, userInfo)
 	if err != nil {
 		logs.Error("LoginWxApiController.PostUserInfo wechat.DecryptOpenDataToStruct AppletUserInfo err:", err)
-		c.Msg = "提交失败E3"
+		c.Msg = "登录失败，请再试一次"
 		return
 	}
 	// mobile := phone.PurePhoneNumber

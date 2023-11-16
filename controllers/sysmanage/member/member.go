@@ -22,7 +22,7 @@ func validate(member *Member) (hasError bool, errMsg string) {
 	valid.Required(member.Username, "errmsg").Message("用户名必填")
 	valid.AlphaDash(member.Username, "errmsg").Message("用户名必须为字母和数字")
 	valid.MinSize(member.Username, 5, "errmsg").Message("用户名至少5个字符")
-	valid.MaxSize(member.Username, 20, "errmsg").Message("用户名最长20位")
+	valid.MaxSize(member.Username, 127, "errmsg").Message("用户名最长127位")
 	valid.Required(member.Name, "errmsg").Message("名称必填")
 	valid.MaxSize(member.Name, 20, "errmsg").Message("名称最长20位")
 	valid.MaxSize(member.Password, 32, "errmsg").Message("密码不符合规范")
@@ -63,6 +63,7 @@ func (c *MemberIndexController) Get() {
 	c.Data["urlMemberIndexGet"] = c.URLFor("MemberIndexController.Get")
 	c.Data["urlMemberLocked"] = c.URLFor("MemberIndexController.Locked")
 	c.Data["urlMemberEditGet"] = c.URLFor("MemberEditController.Get")
+	c.Data["urlMemberVipLogIndex"] = c.URLFor("MemberVipLogIndexController.Get")
 
 	if t, err := template.New("tplIndexMember.tpl").Funcs(map[string]interface{}{
 		"date": beego.Date,
@@ -194,6 +195,8 @@ func (c *MemberEditController) Post() {
 	if member.Cancelled == 1 {
 		member.Username = "aCancelled_" + strconv.FormatInt(member.Id, 10)
 		member.Password = "aCancelled"
+		member.Name = member.Username
+		member.Mobile = ""
 		member.ThirdAuthId = ""
 		member.Token = ""
 		cols = append(cols, "ThirdAuthId", "Password", "Cancelled", "Token")

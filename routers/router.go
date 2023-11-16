@@ -5,13 +5,14 @@ import (
 	"github.com/iufansh/iufans/controllers/sysmanage"
 	"github.com/iufansh/iufans/controllers/sysmanage/admin"
 	"github.com/iufansh/iufans/controllers/sysmanage/appbanner"
+	"github.com/iufansh/iufans/controllers/sysmanage/backtask"
 	"github.com/iufansh/iufans/controllers/sysmanage/gift"
 	"github.com/iufansh/iufans/controllers/sysmanage/index"
 	"github.com/iufansh/iufans/controllers/sysmanage/information"
-	"github.com/iufansh/iufans/controllers/sysmanage/memberlogincount"
-	"github.com/iufansh/iufans/controllers/sysmanage/normalquestion"
 	"github.com/iufansh/iufans/controllers/sysmanage/iplist"
 	"github.com/iufansh/iufans/controllers/sysmanage/login"
+	"github.com/iufansh/iufans/controllers/sysmanage/memberlogincount"
+	"github.com/iufansh/iufans/controllers/sysmanage/normalquestion"
 	"github.com/iufansh/iufans/controllers/sysmanage/organization"
 	"github.com/iufansh/iufans/controllers/sysmanage/permission"
 	"github.com/iufansh/iufans/controllers/sysmanage/quicknav"
@@ -25,6 +26,7 @@ import (
 	"github.com/iufansh/iufans/controllers/sysmanage/appversion"
 	"github.com/iufansh/iufans/controllers/sysmanage/member"
 	"github.com/iufansh/iufans/controllers/sysmanage/membersuggest"
+	"github.com/iufansh/iufans/controllers/sysmanage/memberviplog"
 	"github.com/iufansh/iufans/controllers/sysmanage/paymentconfig"
 )
 
@@ -32,6 +34,7 @@ func init() {
 	// 禁止使用的前缀 i
 	beego.Router("/i/:appNo", &sysfront.AppDownloadFrontController{}, "get:DownloadRedirect")
 	beego.Router("/i/privacy", &sysfront.PrivacyFrontController{})
+	beego.Router("/i/privacy/child", &sysfront.PrivacyFrontController{}, "get:GetChild")
 	beego.Router("/i/protocol", &sysfront.ProtocolFrontController{})
 
 	beego.Router("/sendsmscode", &controllers.CommonController{}, "get:SendSmsCode") // 通用的短信发送
@@ -103,6 +106,8 @@ func init() {
 	beego.Router(adminRouter+"/paymentconfig/enabled", &paymentconfig.PaymentConfigIndexController{}, "post:Enabled")
 	beego.Router(adminRouter+"/paymentconfig/add", &paymentconfig.PaymentConfigAddController{})
 	beego.Router(adminRouter+"/paymentconfig/edit", &paymentconfig.PaymentConfigEditController{})
+
+	beego.Router(adminRouter+"/backtask/index", &backtask.BackTaskIndexController{})
 	/* 会员管理 */
 	beego.Router(adminRouter+"/member/index", &member.MemberIndexController{})
 	beego.Router(adminRouter+"/member/delone", &member.MemberIndexController{}, "post:Delone")
@@ -113,6 +118,8 @@ func init() {
 	beego.Router(adminRouter+"/membersuggest/status", &membersuggest.MemberSuggestIndexController{}, "post:Status")
 
 	beego.Router(adminRouter+"/memberlogincount/index", &memberlogincount.MemberLoginCountIndexController{})
+
+	beego.Router(adminRouter+"/memberviplog/index", &memberviplog.MemberVipLogIndexController{})
 
 	/* 应用管理 */
 	beego.Router(adminRouter+"/appversion/index", &appversion.AppVersionIndexController{})
@@ -147,19 +154,23 @@ func init() {
 	beego.Router(apiRouter+"/loginaliauth", &sysapi.LoginAliyunAuthApiController{})
 	beego.Router(apiRouter+"/login", &sysapi.LoginApiController{})
 	beego.Router(apiRouter+"/loginwx", &sysapi.LoginWxApiController{})
+	beego.Router(apiRouter+"/login/apple", &sysapi.LoginAppleApiController{})
 	beego.Router(apiRouter+"/loginwxa/userinfo", &sysapi.LoginWxApiController{}, "post:PostUserInfo")
 	beego.Router(apiRouter+"/loginqq", &sysapi.LoginQqApiController{})
 	beego.Router(apiRouter+"/loginalipay", &sysapi.LoginAlipayApiController{})
 	beego.Router(apiRouter+"/logout", &sysapi.LoginApiController{}, "*:Logout")
 	beego.Router(apiRouter+"/bindphone", &sysapi.MemberApiController{}, "post:BindPhone")
+	beego.Router(apiRouter+"/unbindphone", &sysapi.MemberApiController{}, "post:UnBindPhone")
 	beego.Router(apiRouter+"/cancelaccount", &sysapi.MemberApiController{}, "post:CancelAccount")
 	beego.Router(apiRouter+"/refreshlogin", &sysapi.RefreshLoginApiController{})
 	beego.Router(apiRouter+"/reg", &sysapi.RegApiController{})
+	beego.Router(apiRouter+"/tourist/reg", &sysapi.RegApiController{}, "post:PostTourist")
 	beego.Router(apiRouter+"/forgetpwd", &sysapi.ForgetPwdApiController{})
 	beego.Router(apiRouter+"/changepwd", &sysapi.ChangePwdApiController{})
 	beego.Router(apiRouter+"/suggest", &sysapi.MemberSuggestApiController{})
 	beego.Router(apiRouter+"/suggest/unread", &sysapi.MemberSuggestApiController{}, "get:GetNewFeedback")
 	beego.Router(apiRouter+"/checkupdate", &sysapi.AppVersionApiController{})
+	beego.Router(apiRouter+"/checkupdate/auto", &sysapi.AppVersionApiController{}, "post:PostAuto")
 	beego.Router(apiRouter+"/info", &sysapi.InformationApiController{})
 	beego.Router(apiRouter+"/banners", &sysapi.AppBannerApiController{})
 	beego.Router(apiRouter+"/normalqa", &sysapi.NormalQuestionApiController{})
