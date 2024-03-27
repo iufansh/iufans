@@ -2,14 +2,13 @@ package sysapi
 
 import (
 	"encoding/json"
+	"strconv"
+	"time"
+
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
 	. "github.com/iufansh/iufans/models"
 	utils2 "github.com/iufansh/iufans/utils"
-	"github.com/iufansh/iutils"
-	"iueun/studyreader/utils"
-	"strconv"
-	"time"
 )
 
 type InformationApiController struct {
@@ -26,13 +25,13 @@ desc:
 func (c *InformationApiController) Get() {
 	defer c.RetJSON()
 
-	forbiddenArea := GetSiteConfigValue(utils.ScApiIpForbidden)
-	if allowed := iutils.CheckIpAllowed(forbiddenArea, c.Ctx.Input.IP()); !allowed {
-		c.Code = utils2.CODE_OK
-		c.Msg = "没有消息"
-		c.Dta = []map[string]interface{}{}
-		return
-	}
+	// forbiddenArea := GetSiteConfigValue(utils.ScApiIpForbidden)
+	// if allowed := iutils.CheckIpAllowed(forbiddenArea, c.Ctx.Input.IP()); !allowed {
+	// 	c.Code = utils2.CODE_OK
+	// 	c.Msg = "没有消息"
+	// 	c.Dta = []map[string]interface{}{}
+	// 	return
+	// }
 
 	receiver := []string{
 		"::",                     // 全部空，表示所有人

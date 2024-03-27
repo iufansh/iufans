@@ -3,14 +3,14 @@ package sysapi
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
 	. "github.com/iufansh/iufans/models"
 	utils2 "github.com/iufansh/iufans/utils"
 	"github.com/iufansh/iutils"
-	"iueun/studyreader/utils"
-	"strings"
 )
 
 type suggestParam struct {
@@ -31,13 +31,13 @@ desc:
 func (c *MemberSuggestApiController) Get() {
 	defer c.RetJSON()
 
-	forbiddenArea := GetSiteConfigValue(utils.ScApiIpForbidden)
-	if allowed := iutils.CheckIpAllowed(forbiddenArea, c.Ctx.Input.IP()); !allowed {
-		c.Code = utils2.CODE_OK
-		c.Msg = "没有消息"
-		c.Dta = []map[string]interface{}{}
-		return
-	}
+	// forbiddenArea := GetSiteConfigValue(utils.ScApiIpForbidden)
+	// if allowed := iutils.CheckIpAllowed(forbiddenArea, c.Ctx.Input.IP()); !allowed {
+	// 	c.Code = utils2.CODE_OK
+	// 	c.Msg = "没有消息"
+	// 	c.Dta = []map[string]interface{}{}
+	// 	return
+	// }
 
 	o := orm.NewOrm()
 	var suggests []MemberSuggest

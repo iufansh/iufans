@@ -3,14 +3,14 @@ package sysapi
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	. "github.com/iufansh/iufans/models"
 	utils2 "github.com/iufansh/iufans/utils"
 	"github.com/iufansh/iutils"
-	"iueun/studyreader/utils"
-	"strings"
-	"time"
 )
 
 type AppVersionApiController struct {
@@ -27,11 +27,11 @@ desc:
 func (c *AppVersionApiController) Get() {
 	defer c.RetJSON()
 
-	forbiddenArea := GetSiteConfigValue(utils.ScApiIpForbidden)
-	if allowed := iutils.CheckIpAllowed(forbiddenArea, c.Ctx.Input.IP()); !allowed {
-		c.Msg = "没有新版"
-		return
-	}
+	// forbiddenArea := GetSiteConfigValue(utils.ScApiIpForbidden)
+	// if allowed := iutils.CheckIpAllowed(forbiddenArea, c.Ctx.Input.IP()); !allowed {
+	// 	c.Msg = "没有新版"
+	// 	return
+	// }
 
 	currentVersion, err := c.GetInt("ver", 0)
 	if err != nil || currentVersion == 0 {

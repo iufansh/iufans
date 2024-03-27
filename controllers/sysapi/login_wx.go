@@ -2,13 +2,14 @@ package sysapi
 
 import (
 	"encoding/json"
+	"time"
+
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
 	"github.com/go-pay/gopay/wechat"
 	"github.com/iufansh/iufans/models"
 	"github.com/iufansh/iufans/utils"
 	"github.com/iufansh/iutils"
-	"time"
 )
 
 type loginWxParam struct {
@@ -54,21 +55,22 @@ func (c *LoginWxApiController) Post() {
 	var nickname string
 	var avatarUrl string
 	if c.AppChannel == utils.AppChannelWxa { // 微信小程序
-		sessionRsp, err := wechat.Code2Session(pc.AppId, vo.AppSecret, p.Code)
-		if err != nil {
-			logs.Error("LoginWxApiController wechat.Code2Session err:", err)
-			c.Msg = "Session获取异常"
-			return
-		}
-		if sessionRsp.Errcode != 0 {
-			logs.Error("LoginWxApiController wechat.Code2Session errCode=", sessionRsp.Errcode)
-			c.Msg = "授权失败，请重试"
-			return
-		}
-		unionId = sessionRsp.Unionid
+		// TODO 以下因为gopay升级，Code2Session方法找不到对应的，先注释掉
+		// sessionRsp, err := wechat.Code2Session(pc.AppId, vo.AppSecret, p.Code)
+		// if err != nil {
+		// 	logs.Error("LoginWxApiController wechat.Code2Session err:", err)
+		// 	c.Msg = "Session获取异常"
+		// 	return
+		// }
+		// if sessionRsp.Errcode != 0 {
+		// 	logs.Error("LoginWxApiController wechat.Code2Session errCode=", sessionRsp.Errcode)
+		// 	c.Msg = "授权失败，请重试"
+		// 	return
+		// }
+		// unionId = sessionRsp.Unionid
 	} else {
 		// 获取access token
-		accessToken, err := wechat.GetOauth2AccessToken(pc.AppId, vo.AppSecret, p.Code)
+		accessToken, err := wechat.GetOauth2AccessToken(c.Ctx.Request.Context(), pc.AppId, vo.AppSecret, p.Code)
 		//logs.Info("accessToken:", fmt.Sprintf("%+v", accessToken))
 		if err != nil {
 			logs.Error("LoginWxApiController wechat.GetOauth2AccessToken err:", err)
@@ -83,7 +85,7 @@ func (c *LoginWxApiController) Post() {
 			return
 		}
 		// 获取用户信息
-		userInfo, err := wechat.GetOauth2UserInfo(accessToken.AccessToken, accessToken.Openid)
+		userInfo, err := wechat.GetOauth2UserInfo(c.Ctx.Request.Context(), accessToken.AccessToken, accessToken.Openid)
 		//logs.Info("userInfo:", fmt.Sprintf("%+v", userInfo))
 		if err != nil {
 			logs.Error("LoginWxApiController wechat.GetUserInfo err:", err)
@@ -174,33 +176,28 @@ func (c *LoginWxApiController) PostUserInfo() {
 		c.Msg = "异常(WX02)"
 		return
 	}
-	sessionRsp, err := wechat.Code2Session(pc.AppId, vo.AppSecret, p.Code)
-	if err != nil {
-		logs.Error("LoginWxApiController.PostUserInfo wechat.Code2Session err:", err)
-		c.Msg = "Session获取异常"
-		return
-	}
-	if sessionRsp.Errcode != 0 {
-		logs.Error("LoginWxApiController.PostUserInfo wechat.Code2Session errCode=", sessionRsp.Errcode)
-		c.Msg = "授权失败，请重试"
-		return
-	}
-	//小程序获取手机号
-	//phone := new(wechat.UserPhone)
-	//err = wechat.DecryptOpenDataToStruct(p.EncryptedData, p.Iv, sessionRsp.SessionKey, phone)
-	//if err != nil {
-	//	logs.Error("LoginWxApiController.PostUserInfo wechat.DecryptOpenDataToStruct UserPhone err:", err)
-	//	c.Msg = "提交失败E2"
-	//	return
-	//}
-	// 获取微信小程序用户信息
-	userInfo := new(wechat.AppletUserInfo)
-	err = wechat.DecryptOpenDataToStruct(p.EncryptedData, p.Iv, sessionRsp.SessionKey, userInfo)
-	if err != nil {
-		logs.Error("LoginWxApiController.PostUserInfo wechat.DecryptOpenDataToStruct AppletUserInfo err:", err)
-		c.Msg = "登录失败，请再试一次"
-		return
-	}
+
+	// TODO 以下因为gopay升级，Code2Session/DecryptOpenDataToStruct方法找不到对应的，先注释掉
+	// sessionRsp, err := wechat.Code2Session(pc.AppId, vo.AppSecret, p.Code)
+	// if err != nil {
+	// 	logs.Error("LoginWxApiController.PostUserInfo wechat.Code2Session err:", err)
+	// 	c.Msg = "Session获取异常"
+	// 	return
+	// }
+	// if sessionRsp.Errcode != 0 {
+	// 	logs.Error("LoginWxApiController.PostUserInfo wechat.Code2Session errCode=", sessionRsp.Errcode)
+	// 	c.Msg = "授权失败，请重试"
+	// 	return
+	// }
+	// // 获取微信小程序用户信息
+	// userInfo := new(wechat.AppletUserInfo)
+	// err = wechat.DecryptOpenDataToStruct(p.EncryptedData, p.Iv, sessionRsp.SessionKey, userInfo)
+	// if err != nil {
+	// 	logs.Error("LoginWxApiController.PostUserInfo wechat.DecryptOpenDataToStruct AppletUserInfo err:", err)
+	// 	c.Msg = "登录失败，请再试一次"
+	// 	return
+	// }
+
 	// mobile := phone.PurePhoneNumber
 	unionId := sessionRsp.Unionid
 	nickname := userInfo.NickName

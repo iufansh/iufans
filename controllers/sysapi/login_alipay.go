@@ -12,17 +12,19 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"hash"
+	"strings"
+	"time"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
+	"github.com/go-pay/crypto/xrsa"
 	"github.com/go-pay/gopay"
 	"github.com/go-pay/gopay/alipay"
 	"github.com/iufansh/iufans/models"
 	"github.com/iufansh/iufans/utils"
 	"github.com/iufansh/iutils"
-	"hash"
-	"strings"
-	"time"
 )
 
 type loginAlipayParam struct {
@@ -68,7 +70,7 @@ func (c *LoginAlipayApiController) Get() {
 	bm.Set("sign_type", "RSA2")
 
 	urlParam := alipay.FormatURLParam(bm)
-	priKey := alipay.FormatPrivateKey(vo.PriKey)
+	priKey := xrsa.FormatAlipayPrivateKey(vo.PriKey)
 	sign, err := getRsaSign(bm, "RSA2", priKey)
 	if err != nil {
 		logs.Error("LoginAlipayApiController.Get getRsaSign err:", err)
@@ -151,7 +153,9 @@ func (c *LoginAlipayApiController) Post() {
 		return
 	}
 	// 获取access token
-	rsp, err := alipay.SystemOauthToken(pc.AppId, alipay.PKCS1, vo.PriKey, "authorization_code", p.Code, "RSA2")
+	//rsp, err := alipay.SystemOauthToken(pc.AppId, alipay.PKCS1, vo.PriKey, "authorization_code", p.Code, "RSA2")
+	// TODO 升级版本后改为下面的，目前只是不会报错，可能有问题
+	rsp, err := alipay.SystemOauthToken(c.Ctx.Request.Context(), pc.AppId, vo.PriKey, "authorization_code", p.Code, "RSA2")
 	logs.Info("alipay.SystemOauthToken rsp=", fmt.Sprintf("%+v", rsp))
 	if err != nil {
 		logs.Error("LoginAlipayApiController alipay.SystemOauthToken err:", err)
@@ -176,15 +180,23 @@ func (c *LoginAlipayApiController) Post() {
 		if beego.BConfig.RunMode == "prod" {
 			isProd = true
 		}
-		client := alipay.NewClient(pc.AppId, vo.PriKey, isProd)
-		client.SetCharset("utf-8").SetSignType("RSA2").SetAuthToken(rsp.Response.AccessToken)
-		resp, err := client.UserInfoShare()
+		client, err := alipay.NewClient(pc.AppId, vo.PriKey, isProd)
+		if err != nil {
+			logs.Error("LoginAlipayApiController alipay.NewClient err:", err)
+			c.Msg = "授权异常(ALI15)"
+			return
+		}
+		// client.SetCharset("utf-8").SetSignType("RSA2").SetAuthToken(rsp.Response.AccessToken)
+		// TODO 升级版本后改为下面的，目前只是不会报错，可能有问题
+		client.SetCharset("utf-8").SetSignType("RSA2")
+		resp, err := client.UserInfoShare(c.Ctx.Request.Context(), rsp.Response.AccessToken)
+
 		logs.Info("LoginAlipayApiController alipay.UserInfoShare rsp=", resp)
 		if err != nil {
 			logs.Error("LoginAlipayApiController alipay.UserInfoShare err:", err)
 			c.Msg = "授权异常(ALI15)"
 			return
-		} else if resp.Response.Code != "10000" {
+		} else if resp.ErrorResponse.Code != "10000" {
 			logs.Error("LoginAlipayApiController alipay.UserInfoShare err:", resp.Response)
 			c.Msg = "信息获取失败(ALI16)"
 			return
