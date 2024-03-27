@@ -5,7 +5,6 @@ import (
 	"github.com/astaxie/beego/orm"
 	. "github.com/iufansh/iufans/models"
 	utils2 "github.com/iufansh/iufans/utils"
-	"github.com/iufansh/iutils"
 )
 
 type NormalQuestionApiController struct {

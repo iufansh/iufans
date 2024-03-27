@@ -10,7 +10,6 @@ import (
 	"github.com/astaxie/beego/orm"
 	. "github.com/iufansh/iufans/models"
 	utils2 "github.com/iufansh/iufans/utils"
-	"github.com/iufansh/iutils"
 )
 
 type AppVersionApiController struct {
@@ -105,11 +104,11 @@ func (c *AppVersionApiController) PostAuto() {
 
 func handleCheck(c *AppVersionApiController, auto bool) {
 
-	forbiddenArea := GetSiteConfigValue(utils.ScApiIpForbidden)
-	if allowed := iutils.CheckIpAllowed(forbiddenArea, c.Ctx.Input.IP()); !allowed {
-		c.Msg = "没有"
-		return
-	}
+	// forbiddenArea := GetSiteConfigValue(utils.ScApiIpForbidden)
+	// if allowed := iutils.CheckIpAllowed(forbiddenArea, c.Ctx.Input.IP()); !allowed {
+	// 	c.Msg = "没有"
+	// 	return
+	// }
 
 	var code = 1
 	var msg string

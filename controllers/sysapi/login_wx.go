@@ -199,47 +199,47 @@ func (c *LoginWxApiController) PostUserInfo() {
 	// }
 
 	// mobile := phone.PurePhoneNumber
-	unionId := sessionRsp.Unionid
-	nickname := userInfo.NickName
-	avatarUrl := userInfo.AvatarUrl
-	var member models.Member
-	if err := o.QueryTable(new(models.Member)).Filter("ThirdAuthId", unionId).Limit(1).One(&member); err != nil && err != orm.ErrNoRows {
-		logs.Error("LoginWxApiController QueryTable Member err:", err)
-		c.Msg = "用户查询异常"
-		return
-	} else if err == orm.ErrNoRows {
-		if member, err = CreateMemberReg(2, c.AppNo, c.AppChannel, c.AppVersionCode, 0, unionId, unionId, nickname, unionId, avatarUrl); err != nil {
-			c.Msg = "登录失败，请重试"
-			return
-		}
-	}
+	// unionId := sessionRsp.Unionid
+	// nickname := userInfo.NickName
+	// avatarUrl := userInfo.AvatarUrl
+	// var member models.Member
+	// if err := o.QueryTable(new(models.Member)).Filter("ThirdAuthId", unionId).Limit(1).One(&member); err != nil && err != orm.ErrNoRows {
+	// 	logs.Error("LoginWxApiController QueryTable Member err:", err)
+	// 	c.Msg = "用户查询异常"
+	// 	return
+	// } else if err == orm.ErrNoRows {
+	// 	if member, err = CreateMemberReg(2, c.AppNo, c.AppChannel, c.AppVersionCode, 0, unionId, unionId, nickname, unionId, avatarUrl); err != nil {
+	// 		c.Msg = "登录失败，请重试"
+	// 		return
+	// 	}
+	// }
 
-	// 自动登录
-	member.LoginIp = c.Ctx.Input.IP()
-	// 以下两个是用于统计登录次数
-	member.AppNo = c.AppNo
-	member.AppChannel = c.AppChannel
-	member.AppVersion = c.AppVersionCode
-	_, _, token := UpdateMemberLoginStatus(member)
+	// // 自动登录
+	// member.LoginIp = c.Ctx.Input.IP()
+	// // 以下两个是用于统计登录次数
+	// member.AppNo = c.AppNo
+	// member.AppChannel = c.AppChannel
+	// member.AppVersion = c.AppVersionCode
+	// _, _, token := UpdateMemberLoginStatus(member)
 
-	c.Code = utils.CODE_OK
-	c.Msg = "ok"
-	var vipEffect int
-	if member.Vip > 0 && !member.VipExpire.IsZero() && member.VipExpire.After(time.Now().AddDate(0, 0, -1)) {
-		vipEffect = 1
-	}
-	c.Dta = map[string]interface{}{
-		"id":         member.Id,
-		"token":      token,
-		"phone":      member.GetFmtMobile(),
-		"nickname":   member.Name,
-		"autoLogin":  true,
-		"avatar":     member.GetFullAvatar(c.Ctx.Input.Site()),
-		"inviteCode": utils.GenInviteCode(member.Id),
-		"vipEffect":  vipEffect,
-		"vip":        member.Vip,
-		"vipExpire":  iutils.FormatDate(member.VipExpire),
-	}
+	// c.Code = utils.CODE_OK
+	// c.Msg = "ok"
+	// var vipEffect int
+	// if member.Vip > 0 && !member.VipExpire.IsZero() && member.VipExpire.After(time.Now().AddDate(0, 0, -1)) {
+	// 	vipEffect = 1
+	// }
+	// c.Dta = map[string]interface{}{
+	// 	"id":         member.Id,
+	// 	"token":      token,
+	// 	"phone":      member.GetFmtMobile(),
+	// 	"nickname":   member.Name,
+	// 	"autoLogin":  true,
+	// 	"avatar":     member.GetFullAvatar(c.Ctx.Input.Site()),
+	// 	"inviteCode": utils.GenInviteCode(member.Id),
+	// 	"vipEffect":  vipEffect,
+	// 	"vip":        member.Vip,
+	// 	"vipExpire":  iutils.FormatDate(member.VipExpire),
+	// }
 }
 
 // 获取用户基本信息(UnionID机制)
