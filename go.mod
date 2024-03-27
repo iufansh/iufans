@@ -5,6 +5,7 @@ go 1.22.1
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.62.706
 	github.com/astaxie/beego v1.12.3
+	github.com/go-pay/crypto v0.0.1
 	github.com/go-pay/gopay v1.5.100
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/iufansh/iuplugins v0.0.0-20231116074446-d449a6d7df3b
@@ -21,7 +22,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/elazarl/goproxy v0.0.0-20231117061959-7cc037d33fb5 // indirect
 	github.com/go-pay/bm v0.0.1 // indirect
-	github.com/go-pay/crypto v0.0.1 // indirect
 	github.com/go-pay/util v0.0.2 // indirect
 	github.com/go-pay/xhttp v0.0.2 // indirect
 	github.com/go-pay/xlog v0.0.2 // indirect
