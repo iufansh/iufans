@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
-	"github.com/iGoogle-ink/gopay/wechat"
+	"github.com/go-pay/gopay/wechat"
 	"github.com/iufansh/iufans/models"
 	"github.com/iufansh/iufans/utils"
 	"github.com/iufansh/iutils"

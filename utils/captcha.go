@@ -12,7 +12,7 @@ var cpt *captcha.Captcha
 func InitCaptcha() {
 	// use beego cache system store the captcha data
 	var domainUri = beego.AppConfig.String("domainuri")
-	if !strings.HasPrefix(domainUri, "/") {
+	if domainUri != "" && !strings.HasPrefix(domainUri, "/") {
 		domainUri = "/" + domainUri
 	}
 	store := cache.NewMemoryCache()
