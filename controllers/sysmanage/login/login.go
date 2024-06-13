@@ -33,7 +33,7 @@ func (c *LoginController) Get() {
 	c.Data["year"] = time.Now().Year()
 	c.Data["siteName"] = GetSiteConfigValue(Scname)
 	c.Data["xsrfdata"] = template.HTML(c.XSRFFormHTML())
-
+	
 	c.Data["urlLoginPost"] = c.URLFor("LoginController.Post")
 	c.Data["urlLoginVerify"] = c.URLFor("LoginController.LoginVerify")
 
